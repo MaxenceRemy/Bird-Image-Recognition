@@ -1,0 +1,7 @@
+numpy
+tqdm
+pandas
+pillow
+matplotlib
+scipy
+tensorflow==2.10.0
