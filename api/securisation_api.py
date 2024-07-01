@@ -77,9 +77,9 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
         )
     return {"access_token": "myfaketoken", "token_type": "bearer"}
 
-# HTTPS
-# Pour utiliser HTTPS, vous devez configurer un serveur HTTPS pour votre application FastAPI.
-# Vous pouvez le faire en utilisant un serveur ASGI comme Uvicorn ou Hypercorn avec un certificat SSL.
+
+# Pour utiliser HTTPS, on doit configurer un serveur HTTPS pour notre application FastAPI.
+# on peut le faire en utilisant un serveur comme Uvicorn avec un certificat SSL.
 
 @app.get("/", summary="Page d'accueil")
 def get_status(username: str = Depends(verify_credentials), api_key: str = Depends(verify_api_key), token: str = Depends(verify_token)):
