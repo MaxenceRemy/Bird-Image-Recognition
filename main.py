@@ -101,6 +101,9 @@ async def predict(
 ):
     logging.info(f"Prédiction demandée par l'utilisateur: {username}")
     try:
+        # Créer le dossier tempImage s'il n'existe pas
+        os.makedirs("tempImage", exist_ok=True)
+        
         image_path = "tempImage/image.png"
         logging.info(f"Sauvegarde de l'image à: {image_path}")
         with open(image_path, "wb") as image_file:
