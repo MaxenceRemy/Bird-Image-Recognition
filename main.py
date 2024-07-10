@@ -33,7 +33,7 @@ app = FastAPI(
 
 # on précharge Tensorflow et Cudnn (pour Nvidia) en important la classe et en faisant l'inférence d'une image
 classifier = predictClass()
-temp_image_path = os.path.join("../data/test", 'FAIRY BLUEBIRD', '7.jpg')
+temp_image_path ='7.jpg'
 classifier.predict(temp_image_path)
 
 # Modèle Pydantic pour le token
