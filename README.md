@@ -1,6 +1,6 @@
 # Bird Image Classification
 
-Le code présent dans ce repository permet de télécharger un dataset contenant près de 60 images d'oiseaux et 525 espèces, d'appliquer un préprocessing, d'entraîner un modèle Tensorflow et de faire l'inférence sur une image.
+Le code présent dans ce repository permet de télécharger un dataset contenant près de 60 000 images d'oiseaux et 525 espèces, d'appliquer un préprocessing, d'entraîner un modèle Tensorflow et de faire l'inférence sur une image.
 
 ## Prérequis
 
