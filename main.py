@@ -31,6 +31,11 @@ app = FastAPI(
     version="0.1"
 )
 
+# on précharge Tensorflow et Cudnn (pour Nvidia) en important la classe et en faisant l'inférence d'une image
+classifier = predictClass()
+temp_image_path = os.path.join("../data/test", 'FAIRY BLUEBIRD', '7.jpg')
+classifier.predict(temp_image_path)
+
 # Modèle Pydantic pour le token
 class Token(BaseModel):
     access_token: str
@@ -110,8 +115,6 @@ async def predict(
             content = await file.read()
             image_file.write(content)
         
-        logging.info("Initialisation du classificateur")
-        classifier = predictClass()
         logging.info("Début de la prédiction")
         meilleure_classe, highest_score = classifier.predict(image_path)
         logging.info(f"Prédiction terminée: {meilleure_classe}, score: {highest_score}")
