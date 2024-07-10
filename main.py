@@ -148,7 +148,7 @@ async def get_class_image(
     api_key: str = Depends(verify_api_key),
     username: str = Depends(verify_token)
 ):
-    dossier_classe = os.path.join("../data/test", classe)
+    dossier_classe = os.path.join("./data/test", classe)
     for name in os.listdir(dossier_classe):
         image_path = os.path.join(dossier_classe, name)
         return FileResponse(image_path, media_type='image/jpeg', filename=f"{classe}_image.jpg")
