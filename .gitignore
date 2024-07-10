@@ -2,4 +2,6 @@
 api.log
 data/
 venv/
+__pycache__/__pycache__/
+tempImage/
 __pycache__/
