@@ -1,0 +1,5 @@
+.env
+api.log
+data/
+venv/
+__pycache__/
