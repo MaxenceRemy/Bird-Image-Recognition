@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from datetime import datetime, timedelta
 import jwt
 import os
+import json
 from dotenv import load_dotenv
 import logging
 from predictClass import predictClass
@@ -19,11 +20,17 @@ logging.basicConfig(filename='api.log', level=logging.INFO,
 
 # Variables d'environnement
 API_KEY = os.getenv("API_KEY")
-API_USERNAME = os.getenv("API_USERNAME")
-API_PASSWORD = os.getenv("API_PASSWORD")
 SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+# Charger les utilisateurs autorisés depuis le fichier JSON
+def load_authorized_users():
+    with open('authorized_users.json', 'r') as f:
+        return json.load(f)
+
+AUTHORIZED_USERS = load_authorized_users()
 
 app = FastAPI(
     title="Reconnaissance des oiseaux",
@@ -58,8 +65,8 @@ def verify_token(token: str = Depends(OAuth2PasswordBearer(tokenUrl="/token"))):
         logging.info(f"Tentative de décodage du token: {token}")
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
-        if username is None:
-            logging.warning("Le token ne contient pas de 'sub'")
+        if username is None or username not in AUTHORIZED_USERS:
+            logging.warning("Le token ne contient pas de 'sub' valide")
             raise HTTPException(status_code=401, detail="Could not validate credentials")
         logging.info(f"Token validé pour l'utilisateur: {username}")
         return username
@@ -75,10 +82,15 @@ def verify_api_key(api_key: str = Header(..., alias="api-key")):
     logging.info("Clé API validée")
     return api_key
 
+# Fonction pour mettre à jour le fichier JSON des utilisateurs autorisés
+def update_authorized_users(users):
+    with open('authorized_users.json', 'w') as f:
+        json.dump(users, f, indent=4)
+
 # Route pour obtenir un token
 @app.post("/token", response_model=Token)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
-    if form_data.username != API_USERNAME or form_data.password != API_PASSWORD:
+    if form_data.username not in AUTHORIZED_USERS or form_data.password != ADMIN_PASSWORD:
         logging.warning(f"Tentative de connexion échouée pour l'utilisateur: {form_data.username}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -148,11 +160,36 @@ async def get_class_image(
     api_key: str = Depends(verify_api_key),
     username: str = Depends(verify_token)
 ):
-    dossier_classe = os.path.join("./data/test", classe)
+    dossier_classe = os.path.join("../data/test", classe)
     for name in os.listdir(dossier_classe):
         image_path = os.path.join(dossier_classe, name)
         return FileResponse(image_path, media_type='image/jpeg', filename=f"{classe}_image.jpg")
     raise HTTPException(status_code=404, detail="Image not found")
+
+# Nouvelle route pour ajouter un utilisateur
+@app.post("/add_user")
+async def add_user(
+    new_username: str = Header(...),
+    api_key: str = Depends(verify_api_key),
+    current_user: str = Depends(verify_token)
+):
+    global AUTHORIZED_USERS
+    if new_username in AUTHORIZED_USERS:
+        raise HTTPException(status_code=400, detail="User already exists")
+    
+    AUTHORIZED_USERS[new_username] = True
+    update_authorized_users(AUTHORIZED_USERS)
+    
+    logging.info(f"Nouvel utilisateur ajouté par {current_user}: {new_username}")
+    return {"status": "User added successfully"}
+
+# Route pour obtenir la liste des utilisateurs autorisés
+@app.get("/get_users")
+async def get_users(
+    api_key: str = Depends(verify_api_key),
+    current_user: str = Depends(verify_token)
+):
+    return {"authorized_users": list(AUTHORIZED_USERS.keys())}
 
 if __name__ == "__main__":
     import uvicorn
