@@ -11,3 +11,4 @@ python-dotenv
 tensorflow
 numpy
 tensorflow==2.10.0
+PyJWT
