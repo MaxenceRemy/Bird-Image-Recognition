@@ -8,7 +8,7 @@ import os
 import json
 from dotenv import load_dotenv
 import logging
-from predictClass import predictClass
+from app.models.predictClass import predictClass
 from fastapi.responses import FileResponse
 
 # Charger les variables d'environnement
