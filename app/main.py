@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends, status, File, UploadFile, Header
+from fastapi import FastAPI, HTTPException, Depends, status, File, UploadFile, Header, Form
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from typing import Optional
 from pydantic import BaseModel
@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 import logging
 from app.models.predictClass import predictClass
 from fastapi.responses import FileResponse
+from app.utils.github_uploader import upload_to_github
 
 # Charger les variables d'environnement
 load_dotenv()
@@ -140,12 +141,35 @@ async def predict(
 @app.post("/add_image")
 async def add_image(
     file: UploadFile = File(...),
-    label: str = Header(None),
+    species: str = Form(...),
+    is_new_species: bool = Form(False),
+    is_unknown: bool = Form(False),
     api_key: str = Depends(verify_api_key),
     username: str = Depends(verify_token)
 ):
-    # Implémentez ici la logique pour ajouter l'image
-    return {"status": "Image ajoutée avec succès"}
+    try:
+        content = await file.read()
+        file_path = f"tempImage/{file.filename}"
+        with open(file_path, "wb") as image_file:
+            image_file.write(content)
+
+        if is_unknown:
+            github_url = upload_to_github(file_path)
+            return {"status": "Image uploaded to GitHub", "url": github_url}
+        elif is_new_species:
+            new_class_path = f"data/train/{species}"
+            os.makedirs(new_class_path, exist_ok=True)
+            os.rename(file_path, f"{new_class_path}/{file.filename}")
+            return {"status": f"New species '{species}' created and image added"}
+        else:
+            class_path = f"data/train/{species}"
+            if not os.path.exists(class_path):
+                raise HTTPException(status_code=400, detail=f"Species '{species}' does not exist")
+            os.rename(file_path, f"{class_path}/{file.filename}")
+            return {"status": f"Image added to existing species '{species}'"}
+    except Exception as e:
+        logging.error(f"Error adding image: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 # Route pour obtenir la liste des espèces
 @app.get("/get_species")

@@ -1,0 +1,9 @@
+version: '3'
+services:
+  pipeline:
+    build: .
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+    environment:
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}

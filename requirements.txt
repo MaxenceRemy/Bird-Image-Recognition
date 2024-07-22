@@ -12,3 +12,9 @@ tensorflow
 numpy
 tensorflow==2.10.0
 PyJWT
+streamlit
+matplotlib
+schedule
+PyGithub
+mlflow
+scikit-learn
