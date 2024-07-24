@@ -10,7 +10,6 @@ class PerformanceTracker:
         self.data_manager = DataManager()
         self.class_names = self.data_manager.get_class_names()
         self.current_log_file = None
-        self.predictions = []  # Ajoutez cette ligne
         logger.info(f"PerformanceTracker initialized with {len(self.class_names)} classes")
 
     def get_current_log_file(self):
@@ -19,7 +18,6 @@ class PerformanceTracker:
 
     def log_prediction(self, predicted_class, confidence, true_class=None):
         log_file = self.get_current_log_file()
-        self.predictions.append((predicted_class, true_class))
         
         new_log = pd.DataFrame({
             'date': [datetime.now().strftime('%Y-%m-%d %H:%M:%S')],
@@ -38,8 +36,10 @@ class PerformanceTracker:
         except Exception as e:
             logger.error(f"Erreur lors de l'enregistrement de la prédiction: {str(e)}")
 
-    def get_performance_metrics(self):
-        log_file = self.get_current_log_file()
+    def get_performance_metrics(self, log_file=None):
+        if log_file is None:
+            log_file = self.get_current_log_file()
+        
         logger.info(f"Tentative de lecture du fichier de log : {log_file}")
         
         try:
@@ -55,7 +55,6 @@ class PerformanceTracker:
 
         # Filtrer les entrées sans vraie classe
         df = df.dropna(subset=['true_class'])
-        logger.info(f"Nombre d'entrées avec une vraie classe valide : {len(df)}")
         
         if df.empty:
             logger.warning("Aucune entrée avec une vraie classe n'a été trouvée.")
