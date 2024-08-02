@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+requests
+Pillow
+numpy
+tqdm
+pandas
+kaggle
+matplotlib
