@@ -3,6 +3,7 @@ C'est la V1 des 4 conteneurs (api user, api admin, preprocessing et inference), 
 - ajouter les poids dans le volume directement
 - ajouter la liste des users aussi dans le volume, avec deux fichiers distincts pour user et admin
 - faire fonctionner la partie github de add_image sur l'api admin
+- l'attente fixe de 30 secondes du conteneur d'inférence en attendant que le dataset existe devrait être dynamique
 - et d'autres choses dont je vous parlerai
 
 La suite consite pour ma part à implémenter les conteneurs d'entraînement et d'évaluation (et du coup pour toi Jihane le streamlit)

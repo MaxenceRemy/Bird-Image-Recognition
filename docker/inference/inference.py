@@ -9,6 +9,7 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras import Model
 import logging
 import tensorflow as tf
+import time
 
 app = FastAPI()
 
@@ -104,12 +105,16 @@ class predictClass:
         return self.class_names
     
 
-
 # on précharge Tensorflow et Cudnn (pour Nvidia) en important la classe et en faisant l'inférence d'une image
 test_folder = os.path.join(volume_path, 'dataset_clean', 'test')
+while not os.path.isdir(test_folder): # on attends que le dataset existe
+    time.sleep(1)
+time.sleep(30) # quand le dossier existe, on attends qu'il soit complet
 classifier = predictClass(model_path = 'main_model.h5', test_path = test_folder)
-temp_image_path = os.path.join(test_folder, 'ABBOTTS BABBLER', '1.jpg')
-classifier.predict(temp_image_path)
+test_image_folder = os.path.join(test_folder, 'ABBOTTS BABBLER')
+image_name = os.listdir(test_image_folder)[0]
+test_image_path = os.path.join(test_image_folder, image_name)
+classifier.predict(test_image_path)
     
 
 @app.get("/")
