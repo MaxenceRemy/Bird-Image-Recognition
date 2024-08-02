@@ -8,7 +8,7 @@ def get_dataset(dataset, destination):
 
     # Initialisation de l'API de Kaggle
     api = KaggleApi()
-    api.authenticate()
+    api.authenticate() # il faut régler les variables d'authentification (voir documentation Kaggle)
     
     # On télécharge le fichier
     api.dataset_download_files(dataset, path = destination, unzip = True)
@@ -20,5 +20,5 @@ def get_dataset(dataset, destination):
 
 
 dataset = "gpiosenka/100-bird-species"
-destination = "./data"
+destination = "./data/dataset_raw"
 get_dataset(dataset, destination)
