@@ -1,6 +1,7 @@
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'preprocessing'))
 
 import mlflow
 from monitoring.drift_monitor import DriftMonitor
@@ -10,8 +11,16 @@ from app.utils.logger import setup_logger, clean_old_logs
 from app.utils.data_manager import DataManager
 from app.models.predictClass import predictClass
 from training.train_model import train_model
+from preprocessing.preprocess_dataset import CleanDB
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 logger = setup_logger('pipeline', 'pipeline.log')
+
+def preprocess_data(data_path):
+    logger.info("Début du prétraitement des données")
+    cleaner = CleanDB(data_path, treshold=False)
+    cleaner.cleanAll()
+    logger.info("Prétraitement des données terminé")
 
 def run_pipeline():
     # Nettoyage des anciens logs
@@ -29,12 +38,18 @@ def run_pipeline():
         drift_monitor = DriftMonitor()
         performance_tracker = PerformanceTracker()
         alert_system = AlertSystem()
-        predictor = predictClass()
+
+        # Prétraitement des données
+        data_path = os.path.join(BASE_DIR, "data")
+        preprocess_data(data_path)
 
         # Entraînement du modèle
         logger.info("Début de l'entraînement du modèle")
         train_model(start_mlflow_run=False)
         logger.info("Fin de l'entraînement du modèle")
+
+        # Chargement du modèle le plus récent
+        predictor = predictClass()
 
         new_data = data_manager.load_new_data()
         all_classes = data_manager.get_class_names()

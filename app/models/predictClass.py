@@ -1,40 +1,45 @@
 import os
 import numpy as np
+import tensorflow as tf
 from tensorflow.keras.preprocessing import image
 from tensorflow.keras.applications.efficientnet import preprocess_input
-from tensorflow.keras.applications import EfficientNetB0
-from tensorflow.keras.layers import Dense, Dropout, GlobalAveragePooling2D
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from tensorflow.keras import Model
 import logging
-import tensorflow as tf
 
 logging.basicConfig(level=logging.INFO)
 
 class predictClass:
-    def __init__(self, model_path="./weights/main_model.h5", test_path="./data/test", img_size=(224, 224)):
+    def __init__(self, model_path=None, test_path="./data/test", img_size=(224, 224)):
         self.img_size = img_size
         self.path_test = os.path.join(test_path)
-        self.model_path = model_path
         
-        # Vérifier l'existence du fichier modèle et du dossier de test
+        if model_path is None:
+            # Chercher le modèle le plus récent dans le dossier 'models'
+            base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            models_dir = os.path.join(base_dir, 'models')
+            model_folders = [f for f in os.listdir(models_dir) if f.startswith('saved_model_')]
+            if not model_folders:
+                raise FileNotFoundError("Aucun modèle sauvegardé n'a été trouvé.")
+            latest_model = max(model_folders, key=lambda x: os.path.getmtime(os.path.join(models_dir, x)))
+            self.model_path = os.path.join(models_dir, latest_model)
+        else:
+            self.model_path = model_path
+
+        # Vérifier l'existence du dossier de modèle et du dossier de test
         if not os.path.exists(self.model_path):
-            raise FileNotFoundError(f"Le fichier modèle {self.model_path} n'existe pas.")
+            raise FileNotFoundError(f"Le dossier de modèle {self.model_path} n'existe pas.")
         if not os.path.exists(self.path_test):
             raise FileNotFoundError(f"Le dossier de test {self.path_test} n'existe pas.")
-        
+
         # Configurer GPU si disponible
         self.configure_gpu()
-        
+
         try:
-            self.test_generator = ImageDataGenerator().flow_from_directory(
-                self.path_test, target_size=self.img_size, batch_size=16)
-            self.num_classes = self.test_generator.num_classes
-            self.class_names = list(self.test_generator.class_indices.keys())
-            
-            self.model = self.build_model()
-            self.model.load_weights(model_path)
+            self.model = tf.saved_model.load(self.model_path)
+            self.predict_fn = self.model.signatures["serving_default"]
             logging.info("Modèle chargé avec succès.")
+            
+            # Obtenir les noms de classes à partir du dossier de test
+            self.class_names = [d for d in os.listdir(self.path_test) if os.path.isdir(os.path.join(self.path_test, d))]
         except Exception as e:
             logging.error(f"Erreur lors de l'initialisation : {str(e)}")
             raise
@@ -49,42 +54,24 @@ class predictClass:
             except RuntimeError as e:
                 logging.error(f"Erreur lors de la configuration du GPU : {e}")
 
-    def build_model(self):
-        base_model = EfficientNetB0(weights='imagenet', include_top=False, input_shape=self.img_size + (3,))
-
-        for layer in base_model.layers:
-            layer.trainable = False
-
-        x = base_model.output
-        x = GlobalAveragePooling2D()(x)
-        x = Dense(1280, activation='relu')(x)
-        x = Dropout(0.2)(x)
-        x = Dense(640, activation='relu')(x)
-        x = Dropout(0.2)(x)
-        predictions = Dense(self.num_classes, activation='softmax')(x)
-        model = Model(inputs=base_model.input, outputs=predictions)
-
-        for layer in base_model.layers[-20:]:
-            layer.trainable = True
-        
-        return model
-
     def predict(self, image_path):
         if not os.path.exists(image_path):
             raise FileNotFoundError(f"L'image {image_path} n'existe pas.")
-        
+
         try:
             img = image.load_img(image_path, target_size=self.img_size)
             img_array = image.img_to_array(img)
             img_array_expanded_dims = np.expand_dims(img_array, axis=0)
             img_ready = preprocess_input(img_array_expanded_dims)
-            
-            prediction = self.model.predict(img_ready)
+
+            predictions = self.predict_fn(tf.constant(img_ready))
+            output_name = list(predictions.keys())[0]
+            prediction = predictions[output_name].numpy()
 
             highest_score_index = np.argmax(prediction)
             meilleure_classe = self.class_names[highest_score_index]
             highest_score = float(np.max(prediction))
-            
+
             logging.info(f"Prédiction effectuée : classe = {meilleure_classe}, score = {highest_score}")
             return meilleure_classe, highest_score
         except Exception as e:

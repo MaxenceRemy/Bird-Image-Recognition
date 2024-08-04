@@ -35,13 +35,12 @@ class TimingCallback(Callback):
         self.logs.append(timer()-self.starttime)
 
 def train_model(start_mlflow_run=True):
-    if start_mlflow_run:
-        mlflow.set_experiment("Bird Classification Training")
-        mlflow.tensorflow.autolog(disable=True)
+    mlflow.set_experiment("Bird Classification Training")
+    mlflow.tensorflow.autolog(disable=True)
 
-    run_context = mlflow.start_run() if start_mlflow_run else nullcontext()
+    run = mlflow.start_run() if start_mlflow_run else mlflow.active_run()
 
-    with run_context:
+    try:
         # Définition du chemin vers le dataset
         dataset_path = os.path.join(BASE_DIR, "data")
         train_path = os.path.join(dataset_path, "train")
@@ -85,7 +84,7 @@ def train_model(start_mlflow_run=True):
         mlflow.log_param("num_classes", num_classes)
 
         # On se base sur le modèle pré-entrainé EfficientNetB0
-        base_model = EfficientNetB0(weights='imagenet', include_top=False)
+        base_model = EfficientNetB0(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
 
         # On dégèle les 20 dernières couches pour affiner le modèle
         for layer in base_model.layers[:-20]:
@@ -96,9 +95,9 @@ def train_model(start_mlflow_run=True):
         # On ajoute nos couches
         x = base_model.output
         x = GlobalAveragePooling2D()(x)
-        x = Dense(1280, activation='relu')(x) 
+        x = Dense(1280, activation='relu')(x)
         x = Dropout(rate=0.2)(x)
-        x = Dense(640, activation='relu')(x)  
+        x = Dense(640, activation='relu')(x)
         x = Dropout(rate=0.2)(x)
         predictions = Dense(num_classes, activation='softmax')(x)
         model = Model(inputs=base_model.input, outputs=predictions)
@@ -114,7 +113,7 @@ def train_model(start_mlflow_run=True):
                             steps_per_epoch=train_generator.samples//train_generator.batch_size,
                             validation_data=valid_generator,
                             validation_steps=valid_generator.samples//valid_generator.batch_size,
-                            callbacks=[reduce_learning_rate, early_stopping, time_callback], 
+                            callbacks=[reduce_learning_rate, early_stopping, time_callback],
                             verbose=1)
 
         # Évaluation du modèle sur le set de test
@@ -124,10 +123,15 @@ def train_model(start_mlflow_run=True):
         logger.info(f"Final validation accuracy: {training_history.history['val_acc'][-1]}")
 
         # Sauvegarde du modèle au format SavedModel
+        os.makedirs(os.path.join(BASE_DIR, 'models'), exist_ok=True)
         model_save_path = os.path.join(BASE_DIR, 'models', f'saved_model_{timestamp}')
-        tf.saved_model.save(model, model_save_path)
-        mlflow.log_artifact(model_save_path, artifact_path="model")
-        logger.info(f"Model saved successfully at {model_save_path}")
+        try:
+            tf.saved_model.save(model, model_save_path)
+            mlflow.log_artifact(model_save_path, artifact_path="model")
+            logger.info(f"Model saved successfully at {model_save_path}")
+        except Exception as e:
+            logger.error(f"Failed to save model: {str(e)}")
+            raise
 
         # Log des métriques manuellement
         mlflow.log_metric("test_accuracy", float(test_accuracy))
@@ -166,7 +170,7 @@ def train_model(start_mlflow_run=True):
         # Comparaison avec le meilleur modèle précédent
         client = mlflow.tracking.MlflowClient()
         best_run = client.search_runs(
-            experiment_ids=[run.info.experiment_id] if start_mlflow_run else [mlflow.active_run().info.experiment_id],
+            experiment_ids=[run.info.experiment_id],
             filter_string="metrics.test_accuracy > 0",
             order_by=["metrics.test_accuracy DESC"],
             max_results=1
@@ -178,6 +182,10 @@ def train_model(start_mlflow_run=True):
                 alert_message = f"Dégradation des performances détectée. Ancienne accuracy: {float(best_run[0].data.metrics['test_accuracy'])}, Nouvelle accuracy: {test_accuracy}"
                 alert_system.send_alert("Alerte de Dégradation des Performances", alert_message)
                 logger.warning(alert_message)
+
+    finally:
+        if start_mlflow_run:
+            mlflow.end_run()
 
 if __name__ == "__main__":
     train_model()

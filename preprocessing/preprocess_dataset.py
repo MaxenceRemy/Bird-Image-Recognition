@@ -8,8 +8,8 @@ from tqdm import tqdm
 import pandas as pd
 from PIL import Image
 from PIL.ExifTags import TAGS
-from UnderSampling import UnderSamplerImages
-from SizeManager import SizeManager
+from .UnderSampling import UnderSamplerImages
+from .SizeManager import SizeManager
 
 class CleanDB:
     def __init__(self, db_to_clean, treshold = 160, random_state=True):
