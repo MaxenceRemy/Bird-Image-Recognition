@@ -46,7 +46,7 @@ def run_pipeline():
 
     mlflow.end_run()
 
-    experiment_name = "Bird Classification Pipeline"
+    experiment_name = "Bird Classification Project"
     experiment = mlflow.get_experiment_by_name(experiment_name)
     if experiment is None:
         experiment_id = mlflow.create_experiment(experiment_name)
@@ -54,7 +54,8 @@ def run_pipeline():
         experiment_id = experiment.experiment_id
     mlflow.set_experiment(experiment_id)
     
-    with mlflow.start_run():
+    with mlflow.start_run(run_name="Pipeline Run"):
+        mlflow.set_tag("run_type", "pipeline")
         logger.info("Démarrage de la pipeline")
 
         monitor_thread = SystemMonitorThread(3600)  # Surveillez pendant 1 heure max

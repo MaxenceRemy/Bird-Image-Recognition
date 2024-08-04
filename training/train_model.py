@@ -31,7 +31,7 @@ class TimingCallback(Callback):
         self.logs.append(timer()-self.starttime)
 
 def train_model(start_mlflow_run=True):
-    experiment_name = "Bird Classification Training"
+    experiment_name = "Bird Classification Project"
     experiment = mlflow.get_experiment_by_name(experiment_name)
     if experiment is None:
         experiment_id = mlflow.create_experiment(experiment_name)
@@ -41,9 +41,12 @@ def train_model(start_mlflow_run=True):
     if start_mlflow_run:
         mlflow.set_experiment(experiment_id)
         mlflow.tensorflow.autolog(disable=True)
-        run = mlflow.start_run()
+        run = mlflow.start_run(run_name="Training Run")
+        mlflow.set_tag("run_type", "training")
     else:
         run = mlflow.active_run()
+        if run is not None:
+            mlflow.set_tag("run_type", "training")
 
     try:
         dataset_path = os.path.join(BASE_DIR, "data")
@@ -103,7 +106,7 @@ def train_model(start_mlflow_run=True):
         model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['acc', 'mean_absolute_error'])
 
         training_history = model.fit(train_generator,
-                            epochs=3,
+                            epochs=1,
                             steps_per_epoch=train_generator.samples//train_generator.batch_size,
                             validation_data=valid_generator,
                             validation_steps=valid_generator.samples//valid_generator.batch_size,
@@ -150,7 +153,7 @@ def train_model(start_mlflow_run=True):
         client = mlflow.tracking.MlflowClient()
         runs = client.search_runs(
             experiment_ids=[experiment_id],
-            filter_string="metrics.test_accuracy > 0",
+            filter_string="metrics.test_accuracy > 0 and tags.run_type = 'training'",
             order_by=["attribute.start_time DESC"],
             max_results=2
         )
@@ -168,15 +171,11 @@ def train_model(start_mlflow_run=True):
                     alert_system.send_alert("Alerte de Dégradation des Performances", alert_message)
                     logger.warning(alert_message)
             
-            if start_mlflow_run:
-                mlflow.log_metric("previous_test_accuracy", previous_accuracy)
-                mlflow.log_metric("accuracy_change", test_accuracy - previous_accuracy)
+            mlflow.log_metric("previous_test_accuracy", previous_accuracy)
+            mlflow.log_metric("accuracy_change", test_accuracy - previous_accuracy)
 
         return model, drift_detected
 
     finally:
         if start_mlflow_run:
             mlflow.end_run()
-
-if __name__ == "__main__":
-    train_model()
