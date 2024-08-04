@@ -7,3 +7,5 @@ tempImage/
 __pycache__/
 mlruns/
 streamlit_env/
+logs/
+models/
