@@ -30,24 +30,14 @@ class TimingCallback(Callback):
     def on_epoch_end(self, epoch, logs={}):
         self.logs.append(timer()-self.starttime)
 
-def train_model(start_mlflow_run=True):
-    experiment_name = "Bird Classification Project"
-    experiment = mlflow.get_experiment_by_name(experiment_name)
-    if experiment is None:
-        experiment_id = mlflow.create_experiment(experiment_name)
+def train_model(start_mlflow_run=True, data_version=None, experiment_id=None):
+    if not mlflow.active_run():
+        with mlflow.start_run(experiment_id=experiment_id, run_name="Model Training", nested=True):
+            return _train_model_internal(data_version, experiment_id)
     else:
-        experiment_id = experiment.experiment_id
+        return _train_model_internal(data_version, experiment_id)
 
-    if start_mlflow_run:
-        mlflow.set_experiment(experiment_id)
-        mlflow.tensorflow.autolog(disable=True)
-        run = mlflow.start_run(run_name="Training Run")
-        mlflow.set_tag("run_type", "training")
-    else:
-        run = mlflow.active_run()
-        if run is not None:
-            mlflow.set_tag("run_type", "training")
-
+def _train_model_internal(data_version, experiment_id):
     try:
         dataset_path = os.path.join(BASE_DIR, "data")
         train_path = os.path.join(dataset_path, "train")
@@ -150,32 +140,36 @@ def train_model(start_mlflow_run=True):
             mlflow.log_metric(f"epoch_{epoch+1}_time", float(time), step=epoch)
 
         drift_detected = False
-        client = mlflow.tracking.MlflowClient()
-        runs = client.search_runs(
-            experiment_ids=[experiment_id],
-            filter_string="metrics.test_accuracy > 0 and tags.run_type = 'training'",
-            order_by=["attribute.start_time DESC"],
-            max_results=2
-        )
+        if experiment_id:
+            client = mlflow.tracking.MlflowClient()
+            runs = client.search_runs(
+                experiment_ids=[experiment_id],
+                filter_string="metrics.test_accuracy > 0 and tags.run_type = 'training'",
+                order_by=["attribute.start_time DESC"],
+                max_results=2
+            )
 
-        if len(runs) > 1:
-            previous_run = runs[1]
-            previous_accuracy = previous_run.data.metrics['test_accuracy']
-            
-            if previous_accuracy > test_accuracy:
-                performance_drop = previous_accuracy - test_accuracy
-                if performance_drop > 0.05:
-                    drift_detected = True
-                    alert_message = f"Dégradation des performances détectée. Ancienne accuracy: {previous_accuracy}, Nouvelle accuracy: {test_accuracy}"
-                    alert_system = AlertSystem()
-                    alert_system.send_alert("Alerte de Dégradation des Performances", alert_message)
-                    logger.warning(alert_message)
-            
-            mlflow.log_metric("previous_test_accuracy", previous_accuracy)
-            mlflow.log_metric("accuracy_change", test_accuracy - previous_accuracy)
+            if len(runs) > 1:
+                previous_run = runs[1]
+                previous_accuracy = previous_run.data.metrics['test_accuracy']
+                
+                if previous_accuracy > test_accuracy:
+                    performance_drop = previous_accuracy - test_accuracy
+                    if performance_drop > 0.05:
+                        drift_detected = True
+                        alert_message = f"Dégradation des performances détectée. Ancienne accuracy: {previous_accuracy}, Nouvelle accuracy: {test_accuracy}"
+                        alert_system = AlertSystem()
+                        alert_system.send_alert("Alerte de Dégradation des Performances", alert_message)
+                        logger.warning(alert_message)
+                
+                mlflow.log_metric("previous_test_accuracy", previous_accuracy)
+                mlflow.log_metric("accuracy_change", test_accuracy - previous_accuracy)
 
         return model, drift_detected
 
-    finally:
-        if start_mlflow_run:
-            mlflow.end_run()
+    except Exception as e:
+        logger.error(f"Une erreur s'est produite lors de l'entraînement du modèle : {str(e)}")
+        raise
+
+if __name__ == "__main__":
+    train_model()

@@ -2,6 +2,7 @@ import sys
 import os
 import threading
 import time
+from datetime import datetime
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'preprocessing'))
 
@@ -15,6 +16,7 @@ from app.utils.data_manager import DataManager
 from app.models.predictClass import predictClass
 from training.train_model import train_model
 from preprocessing.preprocess_dataset import CleanDB
+from app.utils.data_version_manager import DataVersionManager
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 logger = setup_logger('pipeline', 'pipeline.log')
@@ -24,6 +26,11 @@ def preprocess_data(data_path):
     cleaner = CleanDB(data_path, treshold=False)
     cleaner.cleanAll()
     logger.info("Prétraitement des données terminé")
+    
+    data_version_manager = DataVersionManager(data_path)
+    new_version = data_version_manager.update_version()
+    logger.info(f"Nouvelle version des données : {new_version}")
+    return new_version
 
 class SystemMonitorThread(threading.Thread):
     def __init__(self, duration):
@@ -46,19 +53,23 @@ def run_pipeline():
 
     mlflow.end_run()
 
-    experiment_name = "Bird Classification Project"
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    experiment_name = f"Bird Classification Project_{timestamp}"
+    
     experiment = mlflow.get_experiment_by_name(experiment_name)
     if experiment is None:
         experiment_id = mlflow.create_experiment(experiment_name)
     else:
         experiment_id = experiment.experiment_id
-    mlflow.set_experiment(experiment_id)
-    
-    with mlflow.start_run(run_name="Pipeline Run"):
+
+    logger.info(f"Création de l'expérience : {experiment_name}")
+    logger.info(f"ID de l'expérience : {experiment_id}")
+
+    with mlflow.start_run(experiment_id=experiment_id, run_name="Main Pipeline Run"):
         mlflow.set_tag("run_type", "pipeline")
         logger.info("Démarrage de la pipeline")
 
-        monitor_thread = SystemMonitorThread(3600)  # Surveillez pendant 1 heure max
+        monitor_thread = SystemMonitorThread(3600)  # Monitor for 1 hour
         monitor_thread.start()
 
         try:
@@ -68,10 +79,11 @@ def run_pipeline():
             alert_system = AlertSystem()
 
             data_path = os.path.join(BASE_DIR, "data")
-            preprocess_data(data_path)
+            data_version = preprocess_data(data_path)
+            mlflow.set_tag("data_version", data_version)
 
             logger.info("Début de l'entraînement du modèle")
-            model, drift_detected_during_training = train_model(start_mlflow_run=False)
+            model, drift_detected_during_training = train_model(start_mlflow_run=False, data_version=data_version, experiment_id=experiment_id)
             logger.info("Fin de l'entraînement du modèle")
 
             if drift_detected_during_training:
