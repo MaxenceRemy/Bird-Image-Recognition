@@ -2,6 +2,7 @@ import sys
 import os
 import threading
 import time
+import queue
 from datetime import datetime
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'preprocessing'))
@@ -38,15 +39,21 @@ class SystemMonitorThread(threading.Thread):
         self.duration = duration
         self.stop_event = threading.Event()
         self.monitor = SystemMonitor()
+        self.metrics_queue = queue.Queue()
 
     def run(self):
         start_time = time.time()
         while not self.stop_event.is_set() and time.time() - start_time < self.duration:
-            self.monitor.log_metrics()
-            time.sleep(5)  # Log every 5 seconds
+            metrics = self.monitor.get_metrics()
+            self.metrics_queue.put((time.time(), metrics))
 
     def stop(self):
         self.stop_event.set()
+
+    def log_metrics(self):
+        while not self.metrics_queue.empty():
+            timestamp, metrics = self.metrics_queue.get()
+            self.monitor.log_metrics(metrics, timestamp)
 
 def run_pipeline():
     clean_old_logs()
@@ -85,6 +92,9 @@ def run_pipeline():
             logger.info("Début de l'entraînement du modèle")
             model, drift_detected_during_training = train_model(start_mlflow_run=False, data_version=data_version, experiment_id=experiment_id)
             logger.info("Fin de l'entraînement du modèle")
+
+            # Log des métriques système après l'entraînement
+            monitor_thread.log_metrics()
 
             if drift_detected_during_training:
                 logger.warning("Drift détecté pendant l'entraînement")
@@ -163,6 +173,8 @@ def run_pipeline():
         finally:
             monitor_thread.stop()
             monitor_thread.join()
+            # Log final des métriques système
+            monitor_thread.log_metrics()
 
 if __name__ == "__main__":
     run_pipeline()
