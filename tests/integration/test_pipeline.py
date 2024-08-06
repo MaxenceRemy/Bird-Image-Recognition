@@ -1,31 +1,66 @@
 import unittest
-import random
-from app.models.predictClass import predictClass
-from monitoring.performance_tracker import PerformanceTracker
+import os
+import sys
+import mlflow
+from unittest.mock import patch, MagicMock
+
+# Ajoutez le chemin du projet au PYTHONPATH
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from scripts.pipeline import run_pipeline
 
 class TestPipeline(unittest.TestCase):
-    def setUp(self):
-        self.classifier = predictClass()
-        self.tracker = PerformanceTracker()
-        self.classes = ['class1', 'class2', 'class3']  # Remplacez par vos vraies classes
-
-    def test_pipeline(self):
-        # Simuler 100 prédictions
-        for _ in range(100):
-            predicted_class = random.choice(self.classes)
-            true_class = random.choice(self.classes)
-            confidence = random.uniform(0.5, 1.0)
-            self.tracker.log_prediction(predicted_class, confidence, true_class)
-
-        # Vérifier que les prédictions ont été enregistrées
-        overall_accuracy, class_accuracies = self.tracker.get_performance_metrics()
-        self.assertIsInstance(overall_accuracy, float)
-        self.assertIsInstance(class_accuracies, dict)
-        self.assertTrue(0 <= overall_accuracy <= 1)
+    @patch('scripts.pipeline.mlflow')
+    @patch('scripts.pipeline.train_model')
+    @patch('scripts.pipeline.DataManager')
+    @patch('scripts.pipeline.DriftMonitor')
+    @patch('scripts.pipeline.PerformanceTracker')
+    @patch('scripts.pipeline.AlertSystem')
+    @patch('scripts.pipeline.predictClass')
+    def test_run_pipeline(self, mock_predictClass, mock_AlertSystem, mock_PerformanceTracker, 
+                          mock_DriftMonitor, mock_DataManager, mock_train_model, mock_mlflow):
+        # Configuration des mocks
+        mock_mlflow.get_experiment_by_name.return_value = None
+        mock_mlflow.create_experiment.return_value = "1"
+        mock_train_model.return_value = (MagicMock(), False)
         
-        # Vérifier que toutes les classes sont présentes dans les résultats
-        for class_name in self.classes:
-            self.assertIn(class_name, class_accuracies)
+        mock_data_manager = MagicMock()
+        mock_data_manager.load_new_data.return_value = [("/path/to/image1.jpg", "class1"), ("/path/to/image2.jpg", "class2")]
+        mock_data_manager.get_class_names.return_value = ["class1", "class2"]
+        mock_DataManager.return_value = mock_data_manager
+
+        mock_predictor = MagicMock()
+        mock_predictor.predict.return_value = ("class1", 0.9)
+        mock_predictClass.return_value = mock_predictor
+
+        mock_performance_tracker = MagicMock()
+        mock_performance_tracker.get_performance_metrics.return_value = (0.85, {"class1": 0.9, "class2": 0.8})
+        mock_PerformanceTracker.return_value = mock_performance_tracker
+
+        mock_drift_monitor = MagicMock()
+        mock_drift_monitor.check_drift.return_value = (False, "No drift detected")
+        mock_DriftMonitor.return_value = mock_drift_monitor
+
+        # Exécution de la pipeline
+        run_pipeline()
+
+        # Vérifications
+        mock_mlflow.create_experiment.assert_called_once()
+        mock_mlflow.start_run.assert_called_once()
+        mock_train_model.assert_called_once()
+        mock_data_manager.load_new_data.assert_called_once()
+        mock_predictor.predict.assert_called()
+        mock_performance_tracker.get_performance_metrics.assert_called_once()
+        mock_drift_monitor.check_drift.assert_called_once()
+
+        # Vérifiez que les métriques importantes sont enregistrées
+        mock_mlflow.log_metric.assert_any_call("total_images_processed", 2)
+        mock_mlflow.log_metric.assert_any_call("overall_accuracy", 0.85)
+
+        # Vérifiez que les paramètres importants sont enregistrés
+        mock_mlflow.log_param.assert_any_call("drift_detected", False)
+
+        print("Test de la pipeline réussi!")
 
 if __name__ == '__main__':
     unittest.main()

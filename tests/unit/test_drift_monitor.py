@@ -1,47 +1,62 @@
 import unittest
-from unittest.mock import patch, mock_open
 import pandas as pd
 from monitoring.drift_monitor import DriftMonitor
 import os
-import json
+from datetime import datetime, timedelta
 
 class TestDriftMonitor(unittest.TestCase):
     def setUp(self):
+        self.test_train_data_path = 'test_train_data'
         self.test_log_file = 'test_performance_logs.csv'
-        self.test_initial_counts = {'class1': 100, 'class2': 100}
         
-        # Create a test CSV file
+        # Créer un répertoire de données d'entraînement factice
+        os.makedirs(os.path.join(self.test_train_data_path, 'class1'), exist_ok=True)
+        os.makedirs(os.path.join(self.test_train_data_path, 'class2'), exist_ok=True)
+        for i in range(100):
+            open(os.path.join(self.test_train_data_path, 'class1', f'img{i}.jpg'), 'w').close()
+            open(os.path.join(self.test_train_data_path, 'class2', f'img{i}.jpg'), 'w').close()
+
+        # Créer un fichier CSV de test avec une augmentation de class1
+        today = datetime.now().strftime('%Y-%m-%d')
+        yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
         test_data = pd.DataFrame({
-            'date': ['2023-01-01'] * 220,
-            'predicted_class': ['class1'] * 110 + ['class2'] * 110,
-            'confidence': [0.9] * 220
+            'date': [today] * 230 + [yesterday] * 220,
+            'predicted_class': ['class1'] * 120 + ['class2'] * 110 + ['class1'] * 110 + ['class2'] * 110,
+            'confidence': [0.9] * 230 + [0.8] * 220
         })
         test_data.to_csv(self.test_log_file, index=False)
-        
-        # Create a test initial_class_counts.json
-        with open('initial_class_counts.json', 'w') as f:
-            json.dump(self.test_initial_counts, f)
 
     def tearDown(self):
         if os.path.exists(self.test_log_file):
             os.remove(self.test_log_file)
-        if os.path.exists('initial_class_counts.json'):
-            os.remove('initial_class_counts.json')
+        for root, dirs, files in os.walk(self.test_train_data_path, topdown=False):
+            for name in files:
+                os.remove(os.path.join(root, name))
+            for name in dirs:
+                os.rmdir(os.path.join(root, name))
+        os.rmdir(self.test_train_data_path)
 
     def test_check_drift(self):
-        monitor = DriftMonitor(self.test_log_file)
-        drift_detected, reasons = monitor.check_drift()
+        monitor = DriftMonitor(train_data_path=self.test_train_data_path)
+        drift_detected, reasons = monitor.check_drift(log_file=self.test_log_file)
+        
+        print(f"Drift detected: {drift_detected}")
+        print(f"Reasons: {reasons}")
+        print(f"Initial class counts: {monitor.initial_class_counts}")
+        print(f"Current class counts: {monitor.get_initial_class_counts()}")
         
         self.assertTrue(drift_detected)
-        self.assertIn("Class class1 increased by more than 5%", reasons[0])
-        self.assertIn("Class class2 increased by more than 5%", reasons[1])
+        if drift_detected:
+            self.assertIn("La classe class1 a augmenté de plus de 5%", reasons[0])
+        else:
+            print("No drift detected. Check the thresholds and data.")
 
     def test_check_drift_no_data(self):
         empty_log_file = 'empty_log.csv'
-        open(empty_log_file, 'w').close()  # Create an empty file
+        open(empty_log_file, 'w').close()  # Créer un fichier vide
         
-        monitor = DriftMonitor(empty_log_file)
-        drift_detected, reason = monitor.check_drift()
+        monitor = DriftMonitor(train_data_path=self.test_train_data_path)
+        drift_detected, reason = monitor.check_drift(log_file=empty_log_file)
         
         self.assertFalse(drift_detected)
         self.assertEqual(reason, "Pas assez de données pour détecter un drift")

@@ -1,13 +1,17 @@
 import unittest
 import os
 import pandas as pd
+from datetime import datetime
+from unittest.mock import patch, MagicMock
 from monitoring.performance_tracker import PerformanceTracker
 
 class TestPerformanceTracker(unittest.TestCase):
-    def setUp(self):
-        self.test_log_file = 'test_performance_log.csv'
-        self.tracker = PerformanceTracker(self.test_log_file)
-
+    @patch('monitoring.performance_tracker.DataManager')
+    def setUp(self, mock_data_manager):
+        self.test_log_file = f'logs/performance_logs_{datetime.now().strftime("%Y%m%d")}.csv'
+        mock_data_manager.return_value.get_class_names.return_value = ['class1', 'class2']
+        self.tracker = PerformanceTracker()
+        
     def tearDown(self):
         if os.path.exists(self.test_log_file):
             os.remove(self.test_log_file)
@@ -22,13 +26,14 @@ class TestPerformanceTracker(unittest.TestCase):
 
     def test_get_performance_metrics(self):
         test_data = pd.DataFrame({
+            'date': [datetime.now().strftime('%Y-%m-%d %H:%M:%S')] * 4,
             'predicted_class': ['class1', 'class1', 'class2', 'class2'],
             'true_class': ['class1', 'class2', 'class2', 'class2'],
             'confidence': [0.9, 0.8, 0.7, 0.9]
         })
         test_data.to_csv(self.test_log_file, index=False)
 
-        overall_accuracy, class_accuracies = self.tracker.get_performance_metrics()
+        overall_accuracy, class_accuracies = self.tracker.get_performance_metrics(self.test_log_file)
         self.assertEqual(overall_accuracy, 0.75)
         self.assertEqual(class_accuracies, {'class1': 1.0, 'class2': 2/3})
 

@@ -12,9 +12,9 @@ class DriftMonitor:
         self.train_data_path = train_data_path
         self.initial_class_counts = self.get_initial_class_counts()
         self.average_class_size = np.mean(list(self.initial_class_counts.values())) if self.initial_class_counts else 0
-        self.class_increase_threshold = 1.03  # 3% d'augmentation
-        self.new_class_threshold = max(10, int(0.03 * self.average_class_size))  # 3% ou 10 images
-        self.confidence_drop_threshold = 0.03  # 3% de baisse de confiance
+        self.class_increase_threshold = 1.05  # 5% d'augmentation
+        self.new_class_threshold = max(10, int(0.03 * self.average_class_size))
+        self.confidence_drop_threshold = 0.03
 
     def get_initial_class_counts(self):
         class_counts = {}
@@ -28,8 +28,9 @@ class DriftMonitor:
         timestamp = datetime.now().strftime("%Y%m%d")
         return f'logs/performance_logs_{timestamp}.csv'
 
-    def check_drift(self):
-        log_file = self.get_current_log_file()
+    def check_drift(self, log_file=None):
+        if log_file is None:
+            log_file = self.get_current_log_file()
         
         if not os.path.exists(log_file) or os.stat(log_file).st_size == 0:
             logger.warning(f"Le fichier de log {log_file} n'existe pas ou est vide.")
@@ -39,13 +40,14 @@ class DriftMonitor:
         drift_detected = False
         drift_reasons = []
 
-        current_class_counts = self.get_initial_class_counts()
+        # Calculer les comptes de classes à partir du fichier de log
+        current_class_counts = df['predicted_class'].value_counts().to_dict()
 
         for class_name, initial_count in self.initial_class_counts.items():
             current_count = current_class_counts.get(class_name, 0)
             if current_count > initial_count * self.class_increase_threshold:
                 drift_detected = True
-                drift_reasons.append(f"La classe {class_name} a augmenté de plus de 3%: {initial_count} à {current_count}")
+                drift_reasons.append(f"La classe {class_name} a augmenté de plus de 5%: {initial_count} à {current_count}")
 
         new_classes = set(current_class_counts.keys()) - set(self.initial_class_counts.keys())
         for new_class in new_classes:

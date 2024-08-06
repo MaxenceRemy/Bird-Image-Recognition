@@ -1,39 +1,56 @@
 import unittest
-from unittest.mock import patch, MagicMock
 import os
 from monitoring.alert_system import AlertSystem
+import logging
+
+# Configuration du logger pour les tests
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("test_logger")
 
 class TestAlertSystem(unittest.TestCase):
-    @patch('smtplib.SMTP_SSL')
-    def test_send_alert(self, mock_smtp):
-        # Configuration des variables d'environnement pour le test
-        os.environ['ALERT_EMAIL'] = 'yoniedery26@gmail.com'
-        os.environ['EMAIL_PASSWORD'] = 'qzsh hkpz ytaa oevw'
-        os.environ['RECIPIENT_EMAIL'] = 'yoniedery26@gmail.com'
 
-        mock_smtp_instance = MagicMock()
-        mock_smtp.return_value.__enter__.return_value = mock_smtp_instance
+    def setUp(self):
+        # Assurez-vous que ces variables d'environnement sont définies avant d'exécuter les tests
+        self.alert_email = os.getenv('ALERT_EMAIL')
+        self.email_password = os.getenv('EMAIL_PASSWORD')
+        self.recipient_email = os.getenv('RECIPIENT_EMAIL')
+        
+        if not all([self.alert_email, self.email_password, self.recipient_email]):
+            raise ValueError("Les variables d'environnement nécessaires ne sont pas définies.")
+        
+        self.alert_system = AlertSystem()
 
-        alert_system = AlertSystem()
-        result = alert_system.send_alert("Test Subject", "Test Message")
+    def test_send_alert(self):
+        subject = "Test Alert"
+        message = "This is a test alert message."
+        result = self.alert_system.send_alert(subject, message)
+        
+        logger.info(f"Résultat de l'envoi de l'alerte : {result}")
+        
+        self.assertTrue(result, "L'envoi de l'alerte a échoué")
+        
+        # Vous devrez vérifier manuellement que l'email a été reçu
 
-        self.assertTrue(result)
-        mock_smtp_instance.login.assert_called_once_with('yoniedery26@gmail.com', 'qzsh hkpz ytaa oevw')
-        mock_smtp_instance.sendmail.assert_called_once()
-
-        # Nettoyage des variables d'environnement après le test
-        del os.environ['ALERT_EMAIL']
-        del os.environ['EMAIL_PASSWORD']
-        del os.environ['RECIPIENT_EMAIL']
-
-    @patch('smtplib.SMTP_SSL')
-    def test_send_alert_failure(self, mock_smtp):
-        mock_smtp.side_effect = Exception("Test error")
-
-        alert_system = AlertSystem()
-        result = alert_system.send_alert("Test Subject", "Test Message")
-
-        self.assertFalse(result)
+    def test_send_alert_with_invalid_credentials(self):
+        # Sauvegardez le mot de passe correct
+        correct_password = os.environ['EMAIL_PASSWORD']
+        
+        # Remplacez temporairement par un mot de passe invalide
+        os.environ['EMAIL_PASSWORD'] = 'invalid_password'
+        
+        # Réinitialisez l'AlertSystem pour qu'il utilise le nouveau mot de passe
+        self.alert_system = AlertSystem()
+        
+        subject = "Test Alert with Invalid Credentials"
+        message = "This alert should not be sent."
+        result = self.alert_system.send_alert(subject, message)
+        
+        logger.info(f"Résultat de l'envoi de l'alerte avec des identifiants invalides : {result}")
+        
+        self.assertFalse(result, "L'alerte a été envoyée malgré des identifiants invalides")
+        
+        # Restaurez le mot de passe correct
+        os.environ['EMAIL_PASSWORD'] = correct_password
 
 if __name__ == '__main__':
     unittest.main()

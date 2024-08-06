@@ -11,21 +11,17 @@ class SystemMonitor:
         self.logger = logging.getLogger('system_monitor')
         self.logger.setLevel(logging.INFO)
         
-        # Créer un gestionnaire de fichiers pour les logs
         log_dir = 'logs'
         os.makedirs(log_dir, exist_ok=True)
         log_filename = os.path.join(log_dir, f'system_metrics_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log')
         file_handler = logging.FileHandler(log_filename)
         file_handler.setLevel(logging.INFO)
         
-        # Définir le format du log
         formatter = logging.Formatter('%(asctime)s - %(message)s')
         file_handler.setFormatter(formatter)
         
-        # Ajouter le gestionnaire au logger
         self.logger.addHandler(file_handler)
         
-        # Créer un fichier CSV pour les métriques
         self.csv_filename = os.path.join(log_dir, f'system_metrics_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv')
         with open(self.csv_filename, 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
@@ -49,29 +45,28 @@ class SystemMonitor:
             'process_count': process_count
         }
 
-    def log_metrics(self):
-        metrics = self.get_metrics()
+    def log_metrics(self, metrics=None, timestamp=None):
+        if metrics is None:
+            metrics = self.get_metrics()
+        if timestamp is None:
+            timestamp = datetime.now()
+
         log_message = f"CPU: {metrics['cpu_usage']}% | Memory: {metrics['memory_usage']}% | Disk: {metrics['disk_usage']}% | " \
                       f"Net Sent: {metrics['network_sent']} | Net Recv: {metrics['network_recv']} | " \
                       f"Swap: {metrics['swap_usage']}% | Processes: {metrics['process_count']}"
         
         self.logger.info(log_message)
         
-        # Écrire dans le fichier CSV
         with open(self.csv_filename, 'a', newline='') as csvfile:
             writer = csv.writer(csvfile)
-            writer.writerow([datetime.now().strftime("%Y-%m-%d %H:%M:%S")] + list(metrics.values()))
+            writer.writerow([timestamp.strftime("%Y-%m-%d %H:%M:%S")] + list(metrics.values()))
 
-        # Log des métriques dans MLflow
-        mlflow.log_metrics({
-            'cpu_usage': metrics['cpu_usage'],
-            'memory_usage': metrics['memory_usage'],
-            'disk_usage': metrics['disk_usage'],
-            'network_sent': metrics['network_sent'],
-            'network_recv': metrics['network_recv'],
-            'swap_usage': metrics['swap_usage'],
-            'process_count': metrics['process_count']
-        })
+        ts = int(timestamp.timestamp() * 1000)
+        for key, value in metrics.items():
+            try:
+                mlflow.log_metric(key, float(value), step=0, timestamp=ts)
+            except Exception as e:
+                self.logger.error(f"Erreur lors de l'enregistrement de la métrique {key} dans MLflow: {str(e)}")
 
     def monitor(self, duration=60, interval=5):
         start_time = time.time()
@@ -81,4 +76,4 @@ class SystemMonitor:
 
 if __name__ == "__main__":
     monitor = SystemMonitor()
-    monitor.monitor(duration=300, interval=5)  # Surveiller pendant 5 minutes, enregistrer toutes les 5 secondes
+    monitor.monitor(duration=300, interval=5)

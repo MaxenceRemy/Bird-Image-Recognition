@@ -9,9 +9,9 @@ logger = setup_logger('alert_system', 'logs/alert_system.log')
 
 class AlertSystem:
     def __init__(self):
-        self.from_email = "yoniedery26@gmail.com"
+        self.from_email = os.getenv('ALERT_EMAIL')
         self.password = os.getenv('EMAIL_PASSWORD')
-        self.to_email = "yoniedery26@gmail.com"
+        self.to_email = os.getenv('RECIPIENT_EMAIL')
         self.smtp_server = "smtp.gmail.com"
         self.smtp_port = 465  # Port pour SSL
 
@@ -24,7 +24,7 @@ class AlertSystem:
         try:
             with smtplib.SMTP_SSL(self.smtp_server, self.smtp_port) as server:
                 server.login(self.from_email, self.password)
-                server.send_message(msg)
+                server.sendmail(self.from_email, self.to_email, msg.as_string())
             logger.info("Alerte envoyée avec succès")
             return True
         except Exception as e:

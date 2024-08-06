@@ -46,6 +46,7 @@ class SystemMonitorThread(threading.Thread):
         while not self.stop_event.is_set() and time.time() - start_time < self.duration:
             metrics = self.monitor.get_metrics()
             self.metrics_queue.put((time.time(), metrics))
+            time.sleep(5)
 
     def stop(self):
         self.stop_event.set()
@@ -53,7 +54,7 @@ class SystemMonitorThread(threading.Thread):
     def log_metrics(self):
         while not self.metrics_queue.empty():
             timestamp, metrics = self.metrics_queue.get()
-            self.monitor.log_metrics(metrics, timestamp)
+            self.monitor.log_metrics(metrics, datetime.fromtimestamp(timestamp))
 
 def run_pipeline():
     clean_old_logs()
@@ -76,7 +77,7 @@ def run_pipeline():
         mlflow.set_tag("run_type", "pipeline")
         logger.info("Démarrage de la pipeline")
 
-        monitor_thread = SystemMonitorThread(3600)  # Monitor for 1 hour
+        monitor_thread = SystemMonitorThread(3600)
         monitor_thread.start()
 
         try:
@@ -93,7 +94,6 @@ def run_pipeline():
             model, drift_detected_during_training = train_model(start_mlflow_run=False, data_version=data_version, experiment_id=experiment_id)
             logger.info("Fin de l'entraînement du modèle")
 
-            # Log des métriques système après l'entraînement
             monitor_thread.log_metrics()
 
             if drift_detected_during_training:
@@ -120,7 +120,7 @@ def run_pipeline():
                     new_species.add(class_name)
                     predictions[class_name] = 1
 
-                if confidence < 0.5:  # Seuil arbitraire pour les images "inconnues"
+                if confidence < 0.5:
                     unknown_images.append(image_path)
 
                 performance_tracker.log_prediction(class_name, confidence, true_class=true_class)
@@ -173,7 +173,6 @@ def run_pipeline():
         finally:
             monitor_thread.stop()
             monitor_thread.join()
-            # Log final des métriques système
             monitor_thread.log_metrics()
 
 if __name__ == "__main__":
