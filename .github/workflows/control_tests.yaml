@@ -25,7 +25,7 @@ jobs:
 
     - name: Run unit tests
       run: |
-        python -m unittest discover -v -s src/tests
+        python -m unittest discover -v -s tests
 
     - name: Run Flake8
       run: |
