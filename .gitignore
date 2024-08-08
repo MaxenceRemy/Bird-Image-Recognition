@@ -2,9 +2,8 @@
 api.log
 data/
 venv/
-__pycache__/__pycache__/
-tempImage/
 __pycache__/
+tempImage/
 mlruns/
 streamlit_env/
 logs/

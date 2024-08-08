@@ -2,22 +2,19 @@ import os
 import random
 import shutil
 import time
-import csv
-import numpy as np
 from tqdm import tqdm
-import pandas as pd
-from PIL import Image
-from PIL.ExifTags import TAGS
+from DatasetCorrection import DatasetCorrection
 from .UnderSampling import UnderSamplerImages
 from .SizeManager import SizeManager
 
 class CleanDB:
-    def __init__(self, db_to_clean, treshold = 160, random_state=True):
+    def __init__(self, db_to_clean, treshold = 160, random_state=True, test_mode : bool = False):
         """
         Initialisation des chemin vers la db à nettoyer"""
         self.db_to_clean_path = db_to_clean
         self.random_state = random_state
         self.treshold = treshold
+        self.test_mode = test_mode
         self.all_file_path = os.path.join(self.db_to_clean_path, "all_files")
 
     def  rm_set_dir(self):
@@ -155,12 +152,20 @@ class CleanDB:
              self.extract_percent_from_one_class(classe_index, all_classes, set_path, percent)
 
     def start_clean(self):
+        self.dataset_correction()
         sizeManager = SizeManager(db_to_clean_path=self.db_to_clean_path)
         sizeManager.manage()
         self.sets_fusion()
         self.under_sample()
         self.split_train_test_valid()
         self.check_percents()
+
+    def dataset_correction(self):
+        """
+        Correction des incoherences des données, et création du fichier CSV de modèle d'espèces 
+        """
+        datasetCorrection = DatasetCorrection(db_to_clean=self.db_to_clean_path, test_mode = self.test_mode)
+        datasetCorrection.full_correction()
 
     def under_sample(self):
         underSampler = UnderSamplerImages(self.db_to_clean_path, treshold=self.treshold)
@@ -198,7 +203,7 @@ class CleanDB:
 
 if __name__=="__main__":
 
-    cleanDB = CleanDB("./data", treshold=False)  
+    cleanDB = CleanDB("./data", treshold=False, test_mode=False)
     # cleanDB = CleanDB(const_prod.DATASET_TEST, treshold=False)  
     #Le treshold indique combien d'images il y aura pour chaque classe. 
     #La valeur par défaut est 160 pour donner 394 classes

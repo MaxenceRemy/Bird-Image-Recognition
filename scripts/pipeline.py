@@ -22,9 +22,9 @@ from app.utils.data_version_manager import DataVersionManager
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 logger = setup_logger('pipeline', 'pipeline.log')
 
-def preprocess_data(data_path):
+def preprocess_data(data_path, test_dataset_mode : bool = False):
     logger.info("Début du prétraitement des données")
-    cleaner = CleanDB(data_path, treshold=False)
+    cleaner = CleanDB(data_path, treshold=False, test_mode=test_dataset_mode)
     cleaner.cleanAll()
     logger.info("Prétraitement des données terminé")
     
@@ -87,7 +87,7 @@ def run_pipeline():
             alert_system = AlertSystem()
 
             data_path = os.path.join(BASE_DIR, "data")
-            data_version = preprocess_data(data_path)
+            data_version = preprocess_data(data_path, test_dataset_mode=True)
             mlflow.set_tag("data_version", data_version)
 
             logger.info("Début de l'entraînement du modèle")
