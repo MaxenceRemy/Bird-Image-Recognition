@@ -87,7 +87,7 @@ def run_pipeline():
             alert_system = AlertSystem()
 
             data_path = os.path.join(BASE_DIR, "data")
-            data_version = preprocess_data(data_path, test_dataset_mode=True)
+            data_version = preprocess_data(data_path, test_dataset_mode=False)
             mlflow.set_tag("data_version", data_version)
 
             logger.info("Début de l'entraînement du modèle")
