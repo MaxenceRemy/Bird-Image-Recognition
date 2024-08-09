@@ -1,9 +1,11 @@
 import os
+import sys
 import unittest
 from fastapi.testclient import TestClient
 from dotenv import load_dotenv
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))) # Ajoutez le chemin du projet au PYTHONPATH
 from app.utils.logger import setup_logger
-from app import main
+from app.main import app
 
 # Configuration du logger
 logger = setup_logger('test_main', 'test_main.log')
@@ -12,7 +14,7 @@ class TestAPI(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         logger.info(f"Début de test unitaire de main.py")
-        cls.client = TestClient(main)
+        cls.client = TestClient(app)
         load_dotenv() # Charger les variables d'environnement
         cls.API_KEY = os.getenv("API_KEY")
         cls.API_USERNAME = os.getenv("API_USERNAME")
@@ -82,7 +84,7 @@ class TestAPI(unittest.TestCase):
         """
         logger.info(f"Test 06 : predict")
         # On parcourt le dossier contenant les images de tests
-        image_folder = "./daata/raw/test_images"
+        image_folder = "./data/test_images"
         for image_filename in os.listdir(image_folder):
             image_path = os.path.join(image_folder, image_filename)
             expected_label = (os.path.splitext(image_filename)[0]).lower()
