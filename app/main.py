@@ -176,7 +176,7 @@ async def add_image(
 # Route pour obtenir la liste des espèces
 @app.get("/get_species")
 async def get_species(api_key: str = Depends(verify_api_key), username: str = Depends(verify_token)):
-    df = pd.read_csv("./data/raw/birds_list.csv")
+    df = pd.read_csv("./data/birds_list.csv")
     species_list = df["English"].tolist()
     return {"species": species_list}
 
@@ -187,7 +187,7 @@ async def get_class_image(
     api_key: str = Depends(verify_api_key),
     username: str = Depends(verify_token)
 ):
-    dossier_classe = os.path.join("../data/test", classe)
+    dossier_classe = os.path.join("./data/test", classe)
     for name in os.listdir(dossier_classe):
         image_path = os.path.join(dossier_classe, name)
         return FileResponse(image_path, media_type='image/jpeg', filename=f"{classe}_image.jpg")

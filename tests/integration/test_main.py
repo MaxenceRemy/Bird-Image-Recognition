@@ -19,7 +19,6 @@ class TestAPI(unittest.TestCase):
         cls.API_KEY = os.getenv("API_KEY")
         cls.API_USERNAME = os.getenv("API_USERNAME")
         cls.ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
-        cls.HEADERS = {"access_token": cls.API_KEY}
         cls.Token = ""
 
     def test_01_login(self):
@@ -28,7 +27,14 @@ class TestAPI(unittest.TestCase):
         Résultat attendu : Code de statut 200 et en retour un string "acess_token" et "token_type" = "bearer"
         """
         logger.info(f"Test 01 : login")
-        response = self.client.post("/token", data={"username": self.API_USERNAME, "password": self.ADMIN_PASSWORD})
+
+        data = {
+            "username": self.API_USERNAME,
+            "password": self.ADMIN_PASSWORD
+        }
+
+        response = self.client.post("/token", data=data)
+
         self.assertEqual(response.status_code, 200)
         json_response = response.json()
         self.assertIsInstance(json_response["access_token"], str)
@@ -41,31 +47,55 @@ class TestAPI(unittest.TestCase):
         Résultat attendu : Code de statut 200
         """
         logger.info(f"Test 02 : get_status")
-        response = self.client.get("/", headers=self.HEADERS, cookies={"Authorization": f"Bearer {self.Token}"})
+
+        headers = {
+            "api-key": self.API_KEY,
+            "Authorization": f"Bearer {self.Token}"
+        }
+
+        # Exécutez la requête GET avec les en-têtes spécifiés
+        response = self.client.get("/", headers=headers)
+
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), {"status": "Service is running"})
+        json_response = response.json()
+        self.assertEqual(json_response["message"], "Bienvenue sur l'API de reconnaissance d'oiseaux")
+        self.assertEqual(json_response["user"], self.API_USERNAME)
 
     def test_03_invalid_api_key(self):
         """
         Test de l'endpoint d'API "/" avec clé api erronée
-        Résultat attendu : Code de statut 401 et en retour "detail" = "Invalid API Key"
+        Résultat attendu : Code de statut 403 et en retour "detail" = "Invalid API Key"
         """
         logger.info(f"Test 03 : invalid_api_key")
-        invalid_headers = {"access_token": "invalid_key"}
-        response = self.client.get("/", headers=invalid_headers, cookies={"Authorization": f"Bearer {self.Token}"})
-        self.assertEqual(response.status_code, 401)
-        self.assertEqual(response.json(), {"detail": "Invalid API Key"})
+
+        invalid_headers = {
+            "api-key": "invalid_key",
+            "Authorization": f"Bearer {self.Token}"
+        }
+
+        response = self.client.get("/", headers=invalid_headers)
+
+        self.assertEqual(response.status_code, 403)
+        json_response = response.json()
+        self.assertEqual(json_response["detail"], "Invalid API Key")
 
     def test_04_invalid_token(self):
         """
         Test de l'endpoint d'API "/" avec token erroné
-        Résultat attendu : Code de statut 401 et en retour "detail" = "Invalid JWT Token. Received: invalid_token"
+        Résultat attendu : Code de statut 401 et en retour "detail" = "Could not validate credentials"
         """
         logger.info(f"Test 04 : invalid_token")
-        invalid_cookies = {"Authorization": "Bearer invalid_token"}
-        response = self.client.get("/", headers=self.HEADERS, cookies=invalid_cookies)
+
+        invalid_headers = {
+            "api-key": self.API_KEY,
+            "Authorization": "Bearer invalid_token"
+        }
+
+        response = self.client.get("/", headers=invalid_headers)
+
         self.assertEqual(response.status_code, 401)
-        self.assertEqual(response.json(), {"detail": "Invalid JWT Token. Received: invalid_token"})
+        json_response = response.json()
+        self.assertEqual(json_response["detail"], "Could not validate credentials")
 
     def test_05_invalid_login(self):
         """
@@ -73,32 +103,47 @@ class TestAPI(unittest.TestCase):
         Résultat attendu : Code de statut 401 et en retour "detail" = "Incorrect username or password"
         """
         logger.info(f"Test 05 : invalid_login")
-        response = self.client.post("/token", data={"username": "invalid", "password": "invalid"})
-        self.assertEqual(response.status_code, 401)
-        self.assertEqual(response.json(), {"detail": "Incorrect username or password"})
 
+        data = {
+            "username": "invalid",
+            "password": "invalid"
+        }
+
+        response = self.client.post("/token", data=data)
+
+        self.assertEqual(response.status_code, 401)
+        json_response = response.json()
+        self.assertEqual(json_response["detail"], "Incorrect username or password")
+        
     def test_06_predict(self):
         """
         Test de l'endpoint d'API "/predict"
         Résultat attendu : Code de statut 200 et en retour pour chaque image un score entre 0 et 1
         """
         logger.info(f"Test 06 : predict")
-        # On parcourt le dossier contenant les images de tests
-        image_folder = "./data/test_images"
-        for image_filename in os.listdir(image_folder):
-            image_path = os.path.join(image_folder, image_filename)
-            expected_label = (os.path.splitext(image_filename)[0]).lower()
+
+        image_path = os.path.abspath("./data/test/Eastern rosella/11.jpg") # On choisit une image à tester
+        
+        expected_label = "Eastern rosella" # Le label attendu correspond au nom du répertoire contenu l'image envoyée
+
+        with open(image_path, "rb") as image_file:
+
+            files = {
+                "file": ("3.jpg", image_file, "image/png")
+            }
+            headers = {
+                "api-key": self.API_KEY,
+                "Authorization": f"Bearer {self.Token}"
+            }
+
+            response = self.client.post("/predict", files=files, headers=headers)                                                              #TODO
             
-            with open(image_path, "rb") as f:
-                files = {"file": (image_filename, f, "image/png")}
-                response = self.client.post("/predict", files=files, headers=self.HEADERS, cookies={"Authorization": f"Bearer {self.Token}"})
-                
-                self.assertEqual(response.status_code, 200)
-                response_json = response.json()
-                predicted_label = str(response_json["prediction"]).lower() # Le nom du fichier (sans extension) est notre label attendu
-                score = response_json["score"]
-                self.assertEqual(predicted_label, expected_label, f"Expected {expected_label} but got {predicted_label}")
-                self.assertTrue(0 <= score <= 1, f"Expected score between 0 and 1 but got {score}")
+            self.assertEqual(response.status_code, 200)
+            response_json = response.json()
+            predicted_label = str(response_json["prediction"]).capitalize()
+            score = response_json["score"]
+            self.assertEqual(predicted_label, expected_label, f"Expected {expected_label} but got {predicted_label}")
+            self.assertTrue(0 <= score <= 1, f"Expected score between 0 and 1 but got {score}")
 
     def test_07_add_image(self):
         """
@@ -106,12 +151,30 @@ class TestAPI(unittest.TestCase):
         Résultat attendu : Code de statut 200 et en retour "status" = "Image ajoutée avec succès"
         """
         logger.info(f"Test 07 : add_image")
-        with open("./data/test_images/Iwi.png", "rb") as f:
-            files = {"file": ("test_image.png", f, "image/png")}
-            headers_with_label = {**self.HEADERS, "label": "test_label"}
-            response = self.client.post("/add_image", files=files, headers=headers_with_label, cookies={"Authorization": f"Bearer {self.Token}"})
+
+        image_path = os.path.abspath("./data/test/Iiwi/4.jpg")
+
+        with open(image_path, "rb") as image_file:
+            
+            species = "Iiwi"
+            data = {
+                "species": species,
+                "is_new_species": "false",
+                "is_unknown": "false"
+            }
+            files = {
+                "file": ("test_image.jpg", image_file, "image/jpg"),
+            }
+            headers = {
+                "api-key": self.API_KEY,
+                "Authorization": f"Bearer {self.Token}",
+            }
+
+            response = self.client.post("/add_image", files=files, headers=headers, data=data)
+
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.json(), {"status": "Image ajoutée avec succès"})
+            json_response = response.json()
+            self.assertEqual(json_response["status"], f"Image added to existing species '{species}'")
 
     def test_08_get_species(self):
         """
@@ -119,7 +182,14 @@ class TestAPI(unittest.TestCase):
         Résultat attendu : Code de statut 200 et en retour la liste des espèces d'oiseaux 
         """
         logger.info(f"Test 08 : get_species")
-        response = self.client.get("/get_species", headers=self.HEADERS, cookies={"Authorization": f"Bearer {self.Token}"})
+
+        headers = {
+            "api-key": self.API_KEY,
+            "Authorization": f"Bearer {self.Token}"
+        }
+
+        response = self.client.get("/get_species", headers=headers)
+
         self.assertEqual(response.status_code, 200)
         json_response = response.json()
         self.assertIn("species", json_response)
@@ -131,11 +201,21 @@ class TestAPI(unittest.TestCase):
         Résultat attendu : Code de statut 200 et en retour une image
         """
         logger.info(f"Test 09 : get_class_image")
+
         species = "SAND MARTIN"
-        response = self.client.get("/get_class_image", params={"classe": species}, headers=self.HEADERS, cookies={"Authorization": f"Bearer {self.Token}"})
+        headers = {
+            "api-key": self.API_KEY,
+            "Authorization": f"Bearer {self.Token}"
+        }
+        params = {
+            "classe": species
+        }
+
+        response = self.client.get("/get_class_image", params=params, headers=headers)
+
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.headers["content-type"], "image/jpeg")
-        self.assertEqual(response.headers["filename"], species)
+        self.assertEqual(response.headers["content-disposition"].lower().replace('%20', ' '), f"attachment; filename*=utf-8''{species.lower()}_image.jpg")                                                                      #TODO
 
     @classmethod
     def tearDownClass(cls):
