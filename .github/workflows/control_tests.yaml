@@ -23,6 +23,10 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
+    - name: Create kaggle.json file
+      run: |
+        echo '{"username":"ruizguillaume","key":"0b5ee4fea04abbfb4fdfed506c3be84d"}' > kaggle.json
+
     - name: Run unit tests
       run: |
         python -m unittest discover -v -s tests/unit
