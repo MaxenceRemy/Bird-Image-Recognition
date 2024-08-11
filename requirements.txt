@@ -13,6 +13,7 @@ streamlit
 schedule
 PyGithub
 mlflow
+openpyxl
 scikit-learn
 psutil
 GPUtil
