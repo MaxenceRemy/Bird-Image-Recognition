@@ -122,21 +122,21 @@ class TestAPI(unittest.TestCase):
         """
         logger.info(f"Test 06 : predict")
 
-        image_path = os.path.abspath("./data/test/Eastern rosella/11.jpg") # On choisit une image à tester
-        
-        expected_label = "Eastern rosella" # Le label attendu correspond au nom du répertoire contenu l'image envoyée
+        expected_label = "Crimson sunbird" # Le label attendu correspond au nom du répertoire contenu l'image envoyée
+        image_file = os.listdir(f"./data/valid/{expected_label}")[0] # On choisit une image à tester 
+        image_path = f"./data/valid/{expected_label}/{image_file}" # On récupère le chemin de l'image
 
         with open(image_path, "rb") as image_file:
 
             files = {
-                "file": ("3.jpg", image_file, "image/png")
+                "file": (f"{expected_label}_image.jpg", image_file, "image/png")
             }
             headers = {
                 "api-key": self.API_KEY,
                 "Authorization": f"Bearer {self.Token}"
             }
 
-            response = self.client.post("/predict", files=files, headers=headers)                                                              #TODO
+            response = self.client.post("/predict", files=files, headers=headers)
             
             self.assertEqual(response.status_code, 200)
             response_json = response.json()
@@ -152,8 +152,10 @@ class TestAPI(unittest.TestCase):
         """
         logger.info(f"Test 07 : add_image")
 
-        image_path = os.path.abspath("./data/test/Iiwi/4.jpg")
-
+        species = "Iiwi"
+        image_file = os.listdir(f"./data/valid/{species}")[0] # On choisit une image à tester     
+        image_path = f"./data/valid/{species}/{image_file}" # On récupère le chemin de l'image
+ 
         with open(image_path, "rb") as image_file:
             
             species = "Iiwi"
@@ -215,7 +217,7 @@ class TestAPI(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.headers["content-type"], "image/jpeg")
-        self.assertEqual(response.headers["content-disposition"].lower().replace('%20', ' '), f"attachment; filename*=utf-8''{species.lower()}_image.jpg")                                                                      #TODO
+        self.assertEqual(response.headers["content-disposition"].lower().replace('%20', ' '), f"attachment; filename*=utf-8''{species.lower()}_image.jpg")
 
     @classmethod
     def tearDownClass(cls):

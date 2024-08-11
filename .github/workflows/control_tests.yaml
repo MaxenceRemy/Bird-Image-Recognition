@@ -23,6 +23,10 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
+
+    - name: Execute pipeline script
+      run: python ./scripts/pipeline.py --test_dataset_mode True
+
     - name: Run unit tests
       run: |
         python -m unittest discover -v -s tests/unit
