@@ -14,11 +14,12 @@ Ce projet implémente un système de reconnaissance d'oiseaux basé sur des imag
 
 1. Clonez ce repository
 2. Installez les dépendances : `pip install -r requirements.txt`
+3. Ajouter à la racine du répértoire du projet le fichier de configuration Kaggle (kaggle.json) : Connectez-vous à votre compte kaggle.com puis "Settings > API > Create New Token"
 
 ## Utilisation
 
-- Pour entraîner le modèle : `python training/train_model.py`
 - Pour exécuter la pipeline complète : `python scripts/pipeline.py`
+- Pour entraîner le modèle : `python training/train_model.py`
 - Pour lancer l'interface Streamlit : `streamlit run streamlit_app.py`
 
 ## Documentation

@@ -3,6 +3,7 @@ import os
 import threading
 import time
 import queue
+import argparse
 from datetime import datetime
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'preprocessing'))
@@ -18,6 +19,7 @@ from app.models.predictClass import predictClass
 from training.train_model import train_model
 from preprocessing.preprocess_dataset import CleanDB
 from app.utils.data_version_manager import DataVersionManager
+from scripts.downloadDataset import download_dataset
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 logger = setup_logger('pipeline', 'pipeline.log')
@@ -56,7 +58,7 @@ class SystemMonitorThread(threading.Thread):
             timestamp, metrics = self.metrics_queue.get()
             self.monitor.log_metrics(metrics, datetime.fromtimestamp(timestamp))
 
-def run_pipeline():
+def run_pipeline(test_dataset_mode : bool = False):
     clean_old_logs()
 
     mlflow.end_run()
@@ -81,13 +83,16 @@ def run_pipeline():
         monitor_thread.start()
 
         try:
+
+            data_path = os.path.join(BASE_DIR, "data")
+            download_dataset(dataset_name = "gpiosenka/100-bird-species", destination_folder = data_path, kaggle_json_path = "./kaggle.json") # Téléchargement du dataset Kaggle
+            data_version = preprocess_data(data_path=data_path, test_dataset_mode=test_dataset_mode) # Préprocessing 
+
             data_manager = DataManager()
             drift_monitor = DriftMonitor()
             performance_tracker = PerformanceTracker()
             alert_system = AlertSystem()
 
-            data_path = os.path.join(BASE_DIR, "data")
-            data_version = preprocess_data(data_path, test_dataset_mode=False)
             mlflow.set_tag("data_version", data_version)
 
             logger.info("Début de l'entraînement du modèle")
@@ -176,4 +181,8 @@ def run_pipeline():
             monitor_thread.log_metrics()
 
 if __name__ == "__main__":
-    run_pipeline()
+    
+    parser = argparse.ArgumentParser(description="Pipeline Script") # Créer un parseur d'arguments
+    parser.add_argument('--test_dataset_mode', type=bool, default=False, help="Passez test_dataset_mode à True pour générer un dataset allégé") # Ajouter un argument pour --test_dataset_mode
+    args = parser.parse_args()
+    run_pipeline(test_dataset_mode=args.test_dataset_mode)

@@ -1,183 +1,222 @@
-import sys
+from fastapi import FastAPI, HTTPException, Depends, status, File, UploadFile, Header, Form
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from typing import Optional
+from pydantic import BaseModel
+from datetime import datetime, timedelta
+import uvicorn
+import jwt
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import json
+import pandas as pd
+from dotenv import load_dotenv
+import logging
+from app.models.predictClass import predictClass
+from fastapi.responses import FileResponse
+from app.utils.github_uploader import upload_to_github
 
-import mlflow
-import mlflow.keras
-import numpy as np
-import tensorflow as tf
-from tensorflow.keras.applications import EfficientNetB0
-from tensorflow.keras.layers import Dropout, GlobalAveragePooling2D, Dense
-from tensorflow.keras.callbacks import ReduceLROnPlateau, EarlyStopping, Callback
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from tensorflow.keras import Model
-from tensorflow.keras.optimizers import Adam
-from timeit import default_timer as timer
-from monitoring.drift_monitor import DriftMonitor
-from monitoring.alert_system import AlertSystem
-from app.utils.logger import setup_logger
-from datetime import datetime
-from contextlib import nullcontext
+# Charger les variables d'environnement
+load_dotenv()
 
-# Définition du chemin de base du projet
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Configuration du logging
+logging.basicConfig(filename='api.log', level=logging.INFO,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Configuration du logger
-timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-logger = setup_logger('train_model', f'train_model_{timestamp}.log')
+# Variables d'environnement
+API_KEY = os.getenv("API_KEY")
+SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-class TimingCallback(Callback):
-    def __init__(self, logs={}):
-        self.logs=[]
-    def on_epoch_begin(self, epoch, logs={}):
-        self.starttime = timer()
-    def on_epoch_end(self, epoch, logs={}):
-        self.logs.append(timer()-self.starttime)
+# Charger les utilisateurs autorisés depuis le fichier JSON
+def load_authorized_users():
+    with open('authorized_users.json', 'r') as f:
+        return json.load(f)
 
-def train_model(start_mlflow_run=True):
-    if start_mlflow_run:
-        mlflow.set_experiment("Bird Classification Training")
-        mlflow.tensorflow.autolog(disable=True)
+AUTHORIZED_USERS = load_authorized_users()
 
-    run_context = mlflow.start_run() if start_mlflow_run else nullcontext()
+app = FastAPI(
+    title="Reconnaissance des oiseaux",
+    description="API pour identifier l'espèce d'un oiseau à partir d'une photo.",
+    version="0.1"
+)
 
-    with run_context:
-        # Définition du chemin vers le dataset
-        dataset_path = os.path.join(BASE_DIR, "data")
-        train_path = os.path.join(dataset_path, "train")
-        valid_path = os.path.join(dataset_path, "valid")
-        test_path = os.path.join(dataset_path, "test")
+# on précharge Tensorflow et Cudnn (pour Nvidia) en important la classe et en faisant l'inférence d'une image
+classifier = predictClass()
+temp_image_path ='7.jpg'
+classifier.predict(temp_image_path)
 
-        # Vérification de l'existence des dossiers
-        for path in [dataset_path, train_path, valid_path, test_path]:
-            if not os.path.exists(path):
-                logger.error(f"Le dossier {path} n'existe pas.")
-                raise FileNotFoundError(f"Le dossier {path} n'existe pas.")
+# Modèle Pydantic pour le token
+class Token(BaseModel):
+    access_token: str
+    token_type: str
 
-        logger.info(f"Chemin d'entraînement : {train_path}")
-        logger.info(f"Chemin actuel : {os.getcwd()}")
+# Fonction pour créer un token JWT
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=15)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
 
-        # Définition de la batch size
-        batch_size = 16
-        mlflow.log_param("batch_size", batch_size)
+# Fonction pour vérifier le token JWT
+def verify_token(token: str = Depends(OAuth2PasswordBearer(tokenUrl="/token"))):
+    try:
+        logging.info(f"Tentative de décodage du token: {token}")
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None or username not in AUTHORIZED_USERS:
+            logging.warning("Le token ne contient pas de 'sub' valide")
+            raise HTTPException(status_code=401, detail="Could not validate credentials")
+        logging.info(f"Token validé pour l'utilisateur: {username}")
+        return username
+    except jwt.PyJWTError as e:
+        logging.error(f"Erreur lors de la validation du token: {str(e)}")
+        raise HTTPException(status_code=401, detail="Could not validate credentials")
 
-        # Définition des callbacks
-        reduce_learning_rate = ReduceLROnPlateau(monitor="val_loss", patience=2, min_delta=0.01, factor=0.1, cooldown=4, verbose=1)
-        early_stopping = EarlyStopping(patience=5, min_delta=0.01, verbose=1, mode='min', monitor='val_loss')
-        time_callback = TimingCallback()
+# Fonction pour vérifier la clé API
+def verify_api_key(api_key: str = Header(..., alias="api-key")):
+    if api_key != API_KEY:
+        logging.warning("Tentative d'accès avec une clé API invalide")
+        raise HTTPException(status_code=403, detail="Invalid API Key")
+    logging.info("Clé API validée")
+    return api_key
 
-        # Création des générateurs d'images avec augmentation des données plus agressive
-        train_datagen = ImageDataGenerator(
-            rotation_range=30,
-            width_shift_range=0.2,
-            height_shift_range=0.2,
-            horizontal_flip=True,
-            vertical_flip=True,
-            zoom_range=0.2,
-            shear_range=0.2,
-            fill_mode='nearest')
-        train_generator = train_datagen.flow_from_directory(train_path, target_size=(224, 224), batch_size=batch_size)
-        valid_generator = ImageDataGenerator().flow_from_directory(valid_path, target_size=(224, 224), batch_size=batch_size)
-        test_generator = ImageDataGenerator().flow_from_directory(test_path, target_size=(224, 224), batch_size=batch_size)
+# Fonction pour mettre à jour le fichier JSON des utilisateurs autorisés
+def update_authorized_users(users):
+    with open('authorized_users.json', 'w') as f:
+        json.dump(users, f, indent=4)
 
-        # Récupération du nombre de classes
-        num_classes = train_generator.num_classes
-        mlflow.log_param("num_classes", num_classes)
-
-        # On se base sur le modèle pré-entrainé EfficientNetB0
-        base_model = EfficientNetB0(weights='imagenet', include_top=False)
-
-        # On dégèle les 20 dernières couches pour affiner le modèle
-        for layer in base_model.layers[:-20]:
-            layer.trainable = False
-        for layer in base_model.layers[-20:]:
-            layer.trainable = True
-
-        # On ajoute nos couches
-        x = base_model.output
-        x = GlobalAveragePooling2D()(x)
-        x = Dense(1280, activation='relu')(x)
-        x = Dropout(rate=0.2)(x)
-        x = Dense(640, activation='relu')(x)
-        x = Dropout(rate=0.2)(x)
-        predictions = Dense(num_classes, activation='softmax')(x)
-        model = Model(inputs=base_model.input, outputs=predictions)
-
-        # Compilation du modèle avec un optimiseur Adam et un learning rate adaptatif
-        optimizer = Adam(learning_rate=0.001)
-        mlflow.log_param("initial_learning_rate", 0.001)
-        model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['acc', 'mean_absolute_error'])
-
-        # Entraînement du modèle
-        training_history = model.fit(train_generator,
-                            epochs=1,
-                            steps_per_epoch=train_generator.samples//train_generator.batch_size,
-                            validation_data=valid_generator,
-                            validation_steps=valid_generator.samples//valid_generator.batch_size,
-                            callbacks=[reduce_learning_rate, early_stopping, time_callback],
-                            verbose=1)
-
-        # Évaluation du modèle sur le set de test
-        test_loss, test_accuracy, test_mae = model.evaluate(test_generator)
-
-        logger.info(f"Test accuracy: {test_accuracy}")
-        logger.info(f"Final validation accuracy: {training_history.history['val_acc'][-1]}")
-
-        # Sauvegarde du modèle au format SavedModel
-        model_save_path = os.path.join(BASE_DIR, 'models', f'saved_model_{timestamp}')
-        tf.saved_model.save(model, model_save_path)
-        mlflow.log_artifact(model_save_path, artifact_path="model")
-        logger.info(f"Model saved successfully at {model_save_path}")
-
-        # Log des métriques manuellement
-        mlflow.log_metric("test_accuracy", float(test_accuracy))
-        mlflow.log_metric("test_loss", float(test_loss))
-        mlflow.log_metric("test_mae", float(test_mae))
-        mlflow.log_metric("final_val_accuracy", float(training_history.history['val_acc'][-1]))
-
-        # Log de l'historique d'entraînement
-        for epoch, (acc, val_acc, loss, val_loss) in enumerate(zip(
-            training_history.history['acc'],
-            training_history.history['val_acc'],
-            training_history.history['loss'],
-            training_history.history['val_loss']
-        )):
-            mlflow.log_metrics({
-                f"accuracy_epoch_{epoch+1}": float(acc),
-                f"val_accuracy_epoch_{epoch+1}": float(val_acc),
-                f"loss_epoch_{epoch+1}": float(loss),
-                f"val_loss_epoch_{epoch+1}": float(val_loss)
-            }, step=epoch)
-
-        # Log des temps d'exécution par époque
-        for epoch, time in enumerate(time_callback.logs):
-            mlflow.log_metric(f"epoch_{epoch+1}_time", float(time), step=epoch)
-
-        # Vérification de drift et alerte
-        drift_monitor = DriftMonitor()
-        alert_system = AlertSystem()
-
-        drift_detected, drift_details = drift_monitor.check_drift()
-        if drift_detected:
-            alert_message = f"Drift détecté après l'entraînement. Détails: {drift_details}"
-            alert_system.send_alert("Alerte de Drift Post-Entraînement", alert_message)
-            logger.warning(alert_message)
-
-        # Comparaison avec le meilleur modèle précédent
-        client = mlflow.tracking.MlflowClient()
-        best_run = client.search_runs(
-            experiment_ids=[run.info.experiment_id] if start_mlflow_run else [mlflow.active_run().info.experiment_id],
-            filter_string="metrics.test_accuracy > 0",
-            order_by=["metrics.test_accuracy DESC"],
-            max_results=1
+# Route pour obtenir un token
+@app.post("/token", response_model=Token)
+async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
+    if form_data.username not in AUTHORIZED_USERS or form_data.password != ADMIN_PASSWORD:
+        logging.warning(f"Tentative de connexion échouée pour l'utilisateur: {form_data.username}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
         )
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": form_data.username}, expires_delta=access_token_expires
+    )
+    logging.info(f"Connexion réussie pour l'utilisateur: {form_data.username}")
+    return {"access_token": access_token, "token_type": "bearer"}
 
-        if best_run and float(best_run[0].data.metrics['test_accuracy']) > test_accuracy:
-            performance_drop = float(best_run[0].data.metrics['test_accuracy']) - test_accuracy
-            if performance_drop > 0.05:  # Seuil de 5% de dégradation
-                alert_message = f"Dégradation des performances détectée. Ancienne accuracy: {float(best_run[0].data.metrics['test_accuracy'])}, Nouvelle accuracy: {test_accuracy}"
-                alert_system.send_alert("Alerte de Dégradation des Performances", alert_message)
-                logger.warning(alert_message)
+# Route racine
+@app.get("/")
+async def root(api_key: str = Depends(verify_api_key), username: str = Depends(verify_token)):
+    return {"message": "Bienvenue sur l'API de reconnaissance d'oiseaux", "user": username}
+
+# Route pour faire une prédiction
+@app.post("/predict")
+async def predict(
+    file: UploadFile = File(...),
+    api_key: str = Depends(verify_api_key),
+    username: str = Depends(verify_token)
+):
+    logging.info(f"Prédiction demandée par l'utilisateur: {username}")
+    try:
+        # Créer le dossier tempImage s'il n'existe pas
+        os.makedirs("tempImage", exist_ok=True)
+        
+        image_path = "tempImage/image.png"
+        logging.info(f"Sauvegarde de l'image à: {image_path}")
+        with open(image_path, "wb") as image_file:
+            content = await file.read()
+            image_file.write(content)
+        
+        logging.info("Début de la prédiction")
+        meilleure_classe, highest_score = classifier.predict(image_path)
+        logging.info(f"Prédiction terminée: {meilleure_classe}, score: {highest_score}")
+        return {"prediction": meilleure_classe, "score": highest_score}
+    except Exception as e:
+        logging.error(f"Erreur lors de la prédiction: {str(e)}")
+        logging.exception("Traceback complet:")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Route pour ajouter une image
+@app.post("/add_image")
+async def add_image(
+    file: UploadFile = File(...),
+    species: str = Form(...),
+    is_new_species: bool = Form(False),
+    is_unknown: bool = Form(False),
+    api_key: str = Depends(verify_api_key),
+    username: str = Depends(verify_token)
+):
+    try:
+        content = await file.read()
+        file_path = f"tempImage/{file.filename}"
+        with open(file_path, "wb") as image_file:
+            image_file.write(content)
+
+        if is_unknown:
+            github_url = upload_to_github(file_path)
+            return {"status": "Image uploaded to GitHub", "url": github_url}
+        elif is_new_species:
+            new_class_path = f"data/train/{species}"
+            os.makedirs(new_class_path, exist_ok=True)
+            os.rename(file_path, f"{new_class_path}/{file.filename}")
+            return {"status": f"New species '{species}' created and image added"}
+        else:
+            class_path = f"data/train/{species}"
+            if not os.path.exists(class_path):
+                raise HTTPException(status_code=400, detail=f"Species '{species}' does not exist")
+            os.rename(file_path, f"{class_path}/{file.filename}")
+            return {"status": f"Image added to existing species '{species}'"}
+    except Exception as e:
+        logging.error(f"Error adding image: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Route pour obtenir la liste des espèces
+@app.get("/get_species")
+async def get_species(api_key: str = Depends(verify_api_key), username: str = Depends(verify_token)):
+    df = pd.read_csv("./data/birds_list.csv")
+    species_list = df["English"].tolist()
+    return {"species": species_list}
+
+# Route pour télécharger une image
+@app.get("/get_class_image")
+async def get_class_image(
+    classe: str,
+    api_key: str = Depends(verify_api_key),
+    username: str = Depends(verify_token)
+):
+    dossier_classe = os.path.join("./data/test", classe)
+    for name in os.listdir(dossier_classe):
+        image_path = os.path.join(dossier_classe, name)
+        return FileResponse(image_path, media_type='image/jpeg', filename=f"{classe}_image.jpg")
+    raise HTTPException(status_code=404, detail="Image not found")
+
+# Nouvelle route pour ajouter un utilisateur
+@app.post("/add_user")
+async def add_user(
+    new_username: str = Header(...),
+    api_key: str = Depends(verify_api_key),
+    current_user: str = Depends(verify_token)
+):
+    global AUTHORIZED_USERS
+    if new_username in AUTHORIZED_USERS:
+        raise HTTPException(status_code=400, detail="User already exists")
+    
+    AUTHORIZED_USERS[new_username] = True
+    update_authorized_users(AUTHORIZED_USERS)
+    
+    logging.info(f"Nouvel utilisateur ajouté par {current_user}: {new_username}")
+    return {"status": "User added successfully"}
+
+# Route pour obtenir la liste des utilisateurs autorisés
+@app.get("/get_users")
+async def get_users(
+    api_key: str = Depends(verify_api_key),
+    current_user: str = Depends(verify_token)
+):
+    return {"authorized_users": list(AUTHORIZED_USERS.keys())}
 
 if __name__ == "__main__":
-    train_model()
+    uvicorn.run(app, host="0.0.0.0", port=8000)
