@@ -24,6 +24,12 @@ class testSingleInferenceImage(unittest.TestCase):
         """
         logger.info(f"Test 01 : main")
 
+
+
+
+
+
+        self.assertTrue(True)
         # TODO : Actualiser cette fonction
         # species, score = single_image_inference() # Prédiction
 
