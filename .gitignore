@@ -3,11 +3,11 @@
 kaggle.json
 api.log
 # Dossiers
-data/
-tempImage/
-mlruns/
-logs/
-models/
+/data/
+/tempImage/
+/mlruns/
+/logs/
+/models/
 venv/
 streamlit_env/
 __pycache__/
