@@ -11,7 +11,7 @@ Ce projet implémente un système de reconnaissance d'oiseaux basé sur des imag
 - [Documentation](./docs/) Documentation détaillée du projet
 - [Inference](./inference/) Fonction de prédiction utilisée dans les phases de tests
 - [Logs](./logs/) Historique des logs générés pendant l'exécution des différents scripts
-- [Mlruns](./mlruns/) Historique des runs MLflow
+- [MLRuns](./mlruns/) Historique des runs MLflow
 - [Models](./models/) Historique des modèles
 - [Monitoring](./monitoring/) Scripts pour le monitoring et la détection de drift
 - [Preprocessing](./preprocessing/) Scripts de traitement des données
