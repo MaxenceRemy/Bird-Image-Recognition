@@ -1,11 +1,15 @@
+# Fichiers racine
 .env
+kaggle.json
 api.log
+# Dossiers
 data/
-venv/
-__pycache__/
 tempImage/
 mlruns/
-streamlit_env/
 logs/
 models/
-kaggle.json
+venv/
+streamlit_env/
+__pycache__/
+# Exceptions
+!**/README.md

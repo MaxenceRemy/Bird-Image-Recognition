@@ -1,4 +1,4 @@
-# Entraînement du Modèle
+# Entraînement du modèle
 
 Ce dossier contient les scripts nécessaires pour l'entraînement du modèle de reconnaissance d'oiseaux.
 
