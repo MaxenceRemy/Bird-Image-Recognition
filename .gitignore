@@ -12,14 +12,3 @@ venv/
 streamlit_env/
 __pycache__/
 # Exceptions
-!data/README.md
-!tempImage/README.md
-!mlruns/README.md
-!logs/README.md
-!models/README.md
-
-!data/**/README.md
-!tempImage/**/README.md
-!mlruns/**/README.md
-!logs/**/README.md
-!models/**/README.md

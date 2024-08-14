@@ -4,23 +4,23 @@ Ce projet implémente un système de reconnaissance d'oiseaux basé sur des imag
 
 ## Structure du Projet
 
-- [Application](./app/README.md) Modules principaux de l'application
-    - [Models](./app/models/README.md) Classe dédiée à la prédiction
-    - [Utils](./app/utils/README.md) Scripts utilitaires de l'application
-- [Data](./data/README.md) Données relatives au dataset d'entrainement du modèle
-- [Documentation](./docs/README.md) Documentation détaillée du projet
-- [Inference](./inference/README.md) Fonction de prédiction utilisée dans les phases de tests
-- [Logs](./logs/README.md) Historique des logs générés pendant l'exécution des différents scripts
-- [Mlruns](./mlruns/README.md) Historique des runs MLflow
-- [Models](./models/README.md) Historique des modèles
-- [Monitoring](./monitoring/README.md) Scripts pour le monitoring et la détection de drift
-- [Preprocessing](./preprocessing/README.md) Scripts de traitement des données
-- [Temp images](./tempImage/README.md) Stockage temporairement des images dans le cadre du fonctionnement de l'API et du modèle
-- [Scripts](./scripts/README.md) Scripts dédiés à la pipeline
-- [Tests](./tests/README.md) Tests unitaires et d'intégration
-    - [Tests d'intégration](./tests/integration/README.md) Tests d'intégration
-    - [Tests unitaires](./tests/unit/README.md) Tests unitaires
-- [Training](./training/README.md) Scripts pour l'entraînement du modèle
+- [Application](./app/) Modules principaux de l'application
+    - [Models](./app/models/) Classe dédiée à la prédiction
+    - [Utils](./app/utils/) Scripts utilitaires de l'application
+- [Data](./data/) Données relatives au dataset d'entrainement du modèle
+- [Documentation](./docs/) Documentation détaillée du projet
+- [Inference](./inference/) Fonction de prédiction utilisée dans les phases de tests
+- [Logs](./logs/) Historique des logs générés pendant l'exécution des différents scripts
+- [Mlruns](./mlruns/) Historique des runs MLflow
+- [Models](./models/) Historique des modèles
+- [Monitoring](./monitoring/) Scripts pour le monitoring et la détection de drift
+- [Preprocessing](./preprocessing/) Scripts de traitement des données
+- [Temp images](./tempImage/) Stockage temporairement des images dans le cadre du fonctionnement de l'API et du modèle
+- [Scripts](./scripts/) Scripts dédiés à la pipeline
+- [Tests](./tests/) Tests unitaires et d'intégration
+    - [Tests d'intégration](./tests/integration/) Tests d'intégration
+    - [Tests unitaires](./tests/unit/) Tests unitaires
+- [Training](./training/) Scripts pour l'entraînement du modèle
 
 ## Installation
 
