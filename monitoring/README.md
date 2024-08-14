@@ -1,4 +1,4 @@
-# Monitoring et Détection de Drift
+# Monitoring et détection de drift
 
 Ce dossier contient les scripts pour le monitoring des performances du modèle et la détection de drift.
 

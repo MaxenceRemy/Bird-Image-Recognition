@@ -4,8 +4,8 @@ Ce dossier contient les modules principaux de l'application.
 
 ## Structure
 
-- `models/`: Contient la classe `predictClass` pour les prédictions
-- `utils/`: Utilitaires pour la gestion des données et le logging
+- [Models](./models/) Classe dédiée à la prédiction
+- [Utils](./utils/) Scripts utilitaires de gestion des données et de logging de l'application
 
 ## Utilisation
 
