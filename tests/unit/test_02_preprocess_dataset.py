@@ -2,7 +2,6 @@ import os
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))) # Ajoutez le chemin du projet au PYTHONPATH
 import unittest
-import shutil
 from PIL import Image
 from app.utils.logger import setup_logger
 from preprocessing.preprocess_dataset import CleanDB
@@ -27,11 +26,11 @@ class TestPreprocessDataset(unittest.TestCase):
     def test_01_main(self):
         """
         Test du preprocessing du dataset
-        Résultat attendu : Données nettoyées dans le dossier data/processed
+        Résultat attendu : Données nettoyées dans le dossier data
         """
         logger.info(f"Test 01 : main")
 
-        clean_db = CleanDB(self.data_folder, treshold=False, test_mode=True)
+        clean_db = CleanDB(self.data_folder, treshold=False, test_mode=False)
 
         # Le dossier 'CRIMSON BIRD' doit exister, mais pas 'Crimson sunbird'
         self.assertTrue("CRIMSON SUNBIRD" in os.listdir(f"{self.data_folder}/train"), f"Avant preprocessing, le répertoire {self.species_raw_folder} en majuscule devrait exister.")

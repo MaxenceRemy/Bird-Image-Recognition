@@ -30,11 +30,11 @@ Ce projet implémente un système de reconnaissance d'oiseaux basé sur des imag
 
 ## Utilisation
 
-- Pour télécharger le dataset : `python scripts/downloadDataset.py`
-- Pour effectuer le traitement obligatoire des données : `python preprocessing/preprocess_dataset.py`
-- Pour entraîner le modèle : `python training/train_model.py`
-- Pour lancer l'interface Streamlit : `streamlit run streamlit_app.py`
 - Pour exécuter la pipeline complète : `python scripts/pipeline.py`
+    - Pour télécharger le dataset : `python scripts/downloadDataset.py`
+    - Pour effectuer le traitement obligatoire des données : `python preprocessing/preprocess_dataset.py`
+    - Pour entraîner le modèle : `python training/train_model.py`
+- Pour lancer l'interface Streamlit : `streamlit run streamlit_app.py`
 
 ## Documentation
 
