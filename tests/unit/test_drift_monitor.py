@@ -1,7 +1,9 @@
+import os
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))) # Ajoutez le chemin du projet au PYTHONPATH
 import unittest
 import pandas as pd
 from monitoring.drift_monitor import DriftMonitor
-import os
 from datetime import datetime, timedelta
 
 class TestDriftMonitor(unittest.TestCase):

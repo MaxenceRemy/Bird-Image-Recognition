@@ -3,7 +3,7 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))) # Ajoutez le chemin du projet au PYTHONPATH
 import unittest
 from app.utils.logger import setup_logger
-from inference import single_image_inference
+#from inference import single_image_inference
 
 # Configuration du logger
 logger = setup_logger('test_single_inference_image', 'test_single_inference_image.log')
