@@ -16,12 +16,12 @@ class TestDriftMonitor(unittest.TestCase):
             open(os.path.join(self.test_train_data_path, 'class1', f'img{i}.jpg'), 'w').close()
             open(os.path.join(self.test_train_data_path, 'class2', f'img{i}.jpg'), 'w').close()
 
-        # Créer un fichier CSV de test avec une augmentation de class1
+        # Créer un fichier CSV de test avec une augmentation de class1 et class2
         today = datetime.now().strftime('%Y-%m-%d')
         yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
         test_data = pd.DataFrame({
             'date': [today] * 230 + [yesterday] * 220,
-            'predicted_class': ['class1'] * 120 + ['class2'] * 110 + ['class1'] * 110 + ['class2'] * 110,
+            'predicted_class': ['class1'] * 230 + ['class2'] * 220,
             'confidence': [0.9] * 230 + [0.8] * 220
         })
         test_data.to_csv(self.test_log_file, index=False)
@@ -43,13 +43,17 @@ class TestDriftMonitor(unittest.TestCase):
         print(f"Drift detected: {drift_detected}")
         print(f"Reasons: {reasons}")
         print(f"Initial class counts: {monitor.initial_class_counts}")
-        print(f"Current class counts: {monitor.get_initial_class_counts()}")
+        
+        # Calculer les comptages actuels à partir du fichier de log
+        df = pd.read_csv(self.test_log_file)
+        current_counts = df['predicted_class'].value_counts().to_dict()
+        print(f"Current class counts: {current_counts}")
         
         self.assertTrue(drift_detected)
-        if drift_detected:
-            self.assertIn("La classe class1 a augmenté de plus de 5%", reasons[0])
-        else:
-            print("No drift detected. Check the thresholds and data.")
+        self.assertIn("La classe class1 a augmenté de plus de 5%", reasons[0])
+        self.assertIn("La classe class2 a augmenté de plus de 5%", reasons[1])
+        self.assertEqual(monitor.initial_class_counts, {'class1': 100, 'class2': 100})
+        self.assertEqual(current_counts, {'class1': 230, 'class2': 220})
 
     def test_check_drift_no_data(self):
         empty_log_file = 'empty_log.csv'
