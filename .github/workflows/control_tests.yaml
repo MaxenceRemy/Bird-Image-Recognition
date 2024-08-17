@@ -25,7 +25,8 @@ jobs:
 
     - name: Create kaggle.json file
       run: |
-        echo '{"username":"ruizguillaume","key":"0b5ee4fea04abbfb4fdfed506c3be84d"}' > kaggle.json
+        echo '{"username":"${{ secrets.KAGGLE_USERNAME }}","key":"${{ secrets.KAGGLE_KEY }}"}' > kaggle.json
+        chmod 777 kaggle.json
 
     - name: Set up MLflow
       run: |
