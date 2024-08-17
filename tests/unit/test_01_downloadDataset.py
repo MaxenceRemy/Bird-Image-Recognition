@@ -34,6 +34,10 @@ class TestDownloadDataset(unittest.TestCase):
         """
         logger.info(f"Test 01 : main")
 
+        with open('kaggle.json', 'r') as f:
+            print(" !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! FICHIER KAGGLE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            print(f.readlines())
+
         download_dataset(dataset_name = self.dataset_name, destination_folder = self.main_folder, kaggle_json_path = self.kaggle_json_path) # Téléchargement du dataset Kaggle
 
         self.assertTrue(os.path.exists(self.main_folder), f"Le répertoire {self.main_folder} n'existe pas.") # Existence du dossier data
