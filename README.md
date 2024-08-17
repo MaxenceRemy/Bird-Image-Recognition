@@ -9,7 +9,6 @@ Ce projet implémente un système de reconnaissance d'oiseaux basé sur des imag
     - [Utils](./app/utils/) Scripts utilitaires de l'application
 - [Data](./data/) Données relatives au dataset d'entrainement du modèle
 - [Documentation](./docs/) Documentation détaillée du projet
-- [Inference](./inference/) Fonction de prédiction utilisée dans les phases de tests
 - [Logs](./logs/) Historique des logs générés pendant l'exécution des différents scripts
 - [MLRuns](./mlruns/) Historique des runs MLflow
 - [Models](./models/) Historique des modèles
