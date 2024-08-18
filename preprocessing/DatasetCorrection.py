@@ -45,9 +45,9 @@ class DatasetCorrection:
 
     def test_phase_init(self):
         """
-        Génère un dataset de 5 images maximum par classe et met à jour le fichier birds.csv 
+        Génère un dataset de x images maximum par classe et met à jour le fichier birds.csv 
         """
-        images_per_class_to_keep = 5
+        images_per_class_to_keep = 20
         logger.info(f"Création d'un dataset de test contenant {images_per_class_to_keep} images par classes")
 
         if os.path.exists(f"{self.db_to_clean}/birds_backup.csv") : os.remove(f"{self.db_to_clean}/birds_backup.csv")
