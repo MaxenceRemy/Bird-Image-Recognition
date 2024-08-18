@@ -204,7 +204,7 @@ class TestAPI(unittest.TestCase):
         """
         logger.info(f"Test 09 : get_class_image")
 
-        species = "SAND MARTIN"
+        species = "Sand martin"
         headers = {
             "api-key": self.API_KEY,
             "Authorization": f"Bearer {self.Token}"
