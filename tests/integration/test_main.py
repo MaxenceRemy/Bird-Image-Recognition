@@ -118,11 +118,11 @@ class TestAPI(unittest.TestCase):
     def test_06_predict(self):
         """
         Test de l'endpoint d'API "/predict"
-        Résultat attendu : Code de statut 200 et en retour pour chaque image un score entre 0 et 1
+        Résultat attendu : Code de statut 200 et en retour le bon label et un score entre 0 et 1
         """
         logger.info(f"Test 06 : predict")
 
-        expected_label = "Crimson sunbird" # Le label attendu correspond au nom du répertoire contenu l'image envoyée
+        expected_label = "Painted bunting" # Le label attendu correspond au nom du répertoire contenu l'image envoyée
         image_file = os.listdir(f"./data/valid/{expected_label}")[0] # On choisit une image à tester 
         image_path = f"./data/valid/{expected_label}/{image_file}" # On récupère le chemin de l'image
 
