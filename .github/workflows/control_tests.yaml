@@ -23,10 +23,14 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
+    # - name: Create kaggle.json file
+    #   run: |
+    #     echo '{"username":"${{ secrets.KAGGLE_USERNAME }}","key":"${{ secrets.KAGGLE_KEY }}"}' > kaggle.json
+    #     chmod 400 kaggle.json
+
     - name: Create kaggle.json file
       run: |
-        echo '{"username":"${{ secrets.KAGGLE_USERNAME }}","key":"${{ secrets.KAGGLE_KEY }}"}' > kaggle.json
-        chmod 400 kaggle.json
+        echo '{"username":"ruizguillaume","key":"0b5ee4fea04abbfb4fdfed506c3be84d"}' > kaggle.json
 
     - name: Set up MLflow
       run: |
