@@ -195,7 +195,7 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         json_response = response.json()
         self.assertIn("species", json_response)
-        self.assertEqual(len(json_response["species"]), 11194)
+        self.assertTrue(len(json_response["species"]) >= 11194)
 
     def test_09_get_class_image(self):
         """

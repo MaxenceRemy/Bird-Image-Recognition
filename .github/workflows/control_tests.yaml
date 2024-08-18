@@ -38,8 +38,8 @@ jobs:
 
     - name: Execute pipeline script
       run: |
-        python ./scripts/pipeline.py
-    #    python ./scripts/pipeline.py --test_dataset_mode True
+        python ./scripts/pipeline.py --test_dataset_mode True
+    #    python ./scripts/pipeline.py
 
     - name: Run unit tests
       run: |
