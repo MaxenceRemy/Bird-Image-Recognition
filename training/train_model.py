@@ -30,7 +30,18 @@ class TimingCallback(Callback):
     def on_epoch_end(self, epoch, logs={}):
         self.logs.append(timer()-self.starttime)
 
+def get_latest_experiment_id(experiment_name):
+    experiments = mlflow.search_experiments(filter_string=f"name='{experiment_name}'")
+    if experiments:
+        return experiments[0].experiment_id
+    else:
+        mlflow.create_experiment(experiment_name)
+        return mlflow.get_experiment_by_name(experiment_name).experiment_id
+
 def train_model(start_mlflow_run=True, data_version=None, experiment_id=None):
+    if experiment_id is None:
+        experiment_id = get_latest_experiment_id("Model Training Experiment")
+
     if not mlflow.active_run():
         with mlflow.start_run(experiment_id=experiment_id, run_name="Model Training", nested=True):
             return _train_model_internal(data_version, experiment_id)
@@ -104,7 +115,7 @@ def _train_model_internal(data_version, experiment_id):
                             verbose=1)
 
         test_loss, test_accuracy, test_mae = model.evaluate(test_generator)
-        
+
         logger.info(f"Test accuracy: {test_accuracy}")
         logger.info(f"Final validation accuracy: {training_history.history['val_acc'][-1]}")
 
@@ -152,7 +163,7 @@ def _train_model_internal(data_version, experiment_id):
             if len(runs) > 1:
                 previous_run = runs[1]
                 previous_accuracy = previous_run.data.metrics['test_accuracy']
-                
+
                 if previous_accuracy > test_accuracy:
                     performance_drop = previous_accuracy - test_accuracy
                     if performance_drop > 0.05:
@@ -161,7 +172,7 @@ def _train_model_internal(data_version, experiment_id):
                         alert_system = AlertSystem()
                         alert_system.send_alert("Alerte de Dégradation des Performances", alert_message)
                         logger.warning(alert_message)
-                
+
                 mlflow.log_metric("previous_test_accuracy", previous_accuracy)
                 mlflow.log_metric("accuracy_change", test_accuracy - previous_accuracy)
 
