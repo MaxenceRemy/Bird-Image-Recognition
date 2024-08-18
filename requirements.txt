@@ -19,3 +19,4 @@ psutil
 GPUtil
 httpx
 kaggle
+python-multipart
