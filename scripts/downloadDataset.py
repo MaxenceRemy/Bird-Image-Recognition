@@ -55,7 +55,6 @@ def download_dataset(dataset_name : str = "gpiosenka/100-bird-species", destinat
                 logger.info(f"La version du dataset nécéssite une mise à jour.")
     #endregion
 
-
     #regionSupressions des dossiers/fichiers à remplacer
     # Dossiers
     folders = ["train", "test", "valid"]

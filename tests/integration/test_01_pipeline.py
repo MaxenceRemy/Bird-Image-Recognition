@@ -4,7 +4,7 @@ import sys
 import mlflow
 from unittest.mock import patch, MagicMock
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from scripts.pipeline import run_pipeline
 
