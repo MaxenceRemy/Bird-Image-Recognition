@@ -122,7 +122,7 @@ class TestAPI(unittest.TestCase):
         """
         logger.info(f"Test 06 : predict")
 
-        expected_label = "Asian green bee-eater" # Le label attendu correspond au nom du répertoire contenu l'image envoyée
+        expected_label = "Toucan" # Le label attendu correspond au nom du répertoire contenu l'image envoyée
         image_file = os.listdir(f"./data/valid/{expected_label}")[0] # On choisit une image à tester 
         image_path = f"./data/valid/{expected_label}/{image_file}" # On récupère le chemin de l'image
 
