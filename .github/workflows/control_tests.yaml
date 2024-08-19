@@ -45,6 +45,15 @@ jobs:
           exit 1
         fi
 
+    - name: Models folder suppression
+      run: |
+        if [ -d "./models" ]; then
+          rm -rf ./models/*
+        else
+          echo "Le répertoire 'models' n'existe pas"
+          exit 1
+        fi
+
     - name: Execute pipeline script
       run: |
         python ./scripts/pipeline.py
@@ -52,7 +61,7 @@ jobs:
 
     - name: Run integration tests
       run: |
-        python -m unittest discover -v -s tests/integration/test_02_main.py
+        python -m unittest discover -v -s tests/integration
 
     - name: Run Flake8
       run: |
