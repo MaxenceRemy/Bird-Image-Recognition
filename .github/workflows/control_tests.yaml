@@ -28,9 +28,9 @@ jobs:
         echo '{"username":"${{ secrets.KAGGLE_USERNAME }}","key":"${{ secrets.KAGGLE_KEY }}"}' > kaggle.json
         chmod 400 kaggle.json
 
-    - name: Set up MLflow
-      run: |
-        mlflow server --backend-store-uri sqlite:///mlflow.db --default-artifact-root ./mlruns &
+    # - name: Set up MLflow
+    #   run: |
+    #     mlflow server --backend-store-uri sqlite:///mlflow.db --default-artifact-root ./mlruns &
 
     - name: Run unit tests
       run: |
@@ -47,8 +47,8 @@ jobs:
 
     - name: Execute pipeline script
       run: |
-        python ./scripts/pipeline.py --test_dataset_mode False
-      #  python ./scripts/pipeline.py
+        python ./scripts/pipeline.py
+      #  python ./scripts/pipeline.py --test_dataset_mode True
 
     - name: Run integration tests
       run: |
@@ -58,11 +58,11 @@ jobs:
       run: |
         flake8 src
             
-    - name: Upload test results
-      uses: actions/upload-artifact@v2
-      if: always()
-      with:
-        name: test-results
-        path: |
-          ./logs/*.log
-          ./mlruns
+    # - name: Upload test results
+    #   uses: actions/upload-artifact@v2
+    #   if: always()
+    #   with:
+    #     name: test-results
+    #     path: |
+    #       ./logs/*.log
+    #       ./mlruns
