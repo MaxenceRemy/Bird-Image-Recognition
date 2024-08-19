@@ -30,7 +30,7 @@ class TestPreprocessDataset(unittest.TestCase):
         """
         logger.info(f"Test 01 : main")
 
-        clean_db = CleanDB(self.data_folder, treshold=False, test_mode=True)
+        clean_db = CleanDB(self.data_folder, treshold=False, test_mode=False)
 
         # Le dossier 'CRIMSON BIRD' doit exister, mais pas 'Crimson sunbird'
         self.assertTrue("CRIMSON SUNBIRD" in os.listdir(f"{self.data_folder}/train"), f"Avant preprocessing, le répertoire {self.species_raw_folder} en majuscule devrait exister.")

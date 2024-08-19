@@ -36,11 +36,6 @@ jobs:
       run: |
         mlflow server --backend-store-uri sqlite:///mlflow.db --default-artifact-root ./mlruns &
 
-    - name: Execute pipeline script
-      run: |
-        python ./scripts/pipeline.py --test_dataset_mode True
-    #    python ./scripts/pipeline.py
-
     - name: Run unit tests
       run: |
         python -m unittest discover -v -s tests/unit
@@ -48,6 +43,20 @@ jobs:
     - name: Run integration tests
       run: |
         python -m unittest discover -v -s tests/integration
+
+    - name: Data folder suppression
+      run: |
+        if [ -d "./data" ]; then
+          rm -rf ./data/*
+        else
+          echo "Le répertoire 'data' n'existe pas"
+          exit 1
+        fi
+
+    - name: Execute pipeline script
+      run: |
+        python ./scripts/pipeline.py --test_dataset_mode True
+    #    python ./scripts/pipeline.py
 
     - name: Run Flake8
       run: |
