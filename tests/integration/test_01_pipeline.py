@@ -46,7 +46,7 @@ class TestPipeline(unittest.TestCase):
         mock_preprocess_data.return_value = "mocked_data_version"
 
         # Exécution de la pipeline
-        run_pipeline()
+        run_pipeline(test_dataset_mode=True)
 
         # Vérifications
         mock_mlflow.create_experiment.assert_called_once()

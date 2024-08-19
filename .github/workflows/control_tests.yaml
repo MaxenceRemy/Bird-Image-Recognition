@@ -36,10 +36,6 @@ jobs:
       run: |
         python -m unittest discover -v -s tests/unit
 
-    - name: Run integration tests
-      run: |
-        python -m unittest discover -v -s tests/integration
-
     - name: Data folder suppression
       run: |
         if [ -d "./data" ]; then
@@ -49,10 +45,14 @@ jobs:
           exit 1
         fi
 
-    - name: Execute pipeline script
-      run: |
-        python ./scripts/pipeline.py --test_dataset_mode True
+    # - name: Execute pipeline script
+    #   run: |
+    #     python ./scripts/pipeline.py --test_dataset_mode True
     #    python ./scripts/pipeline.py
+
+    - name: Run integration tests
+      run: |
+        python -m unittest discover -v -s tests/integration
 
     - name: Run Flake8
       run: |
