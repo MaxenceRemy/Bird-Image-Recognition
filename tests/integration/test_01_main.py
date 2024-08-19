@@ -129,7 +129,7 @@ class TestAPI(unittest.TestCase):
         with open(image_path, "rb") as image_file:
 
             files = {
-                "file": (f"{expected_label}_image.jpg", image_file, "image/png")
+                "file": (f"{expected_label}_image.jpg", image_file, "image/jpg")
             }
             headers = {
                 "api-key": self.API_KEY,

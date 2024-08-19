@@ -107,7 +107,7 @@ def _train_model_internal(data_version, experiment_id):
         model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['acc', 'mean_absolute_error'])
 
         training_history = model.fit(train_generator,
-                            epochs=3,
+                            epochs=8,
                             steps_per_epoch=train_generator.samples//train_generator.batch_size,
                             validation_data=valid_generator,
                             validation_steps=valid_generator.samples//valid_generator.batch_size,
