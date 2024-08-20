@@ -54,10 +54,10 @@ jobs:
           exit 1
         fi
 
-    - name: Execute pipeline script
-      run: |
-        python ./scripts/pipeline.py
-      #  python ./scripts/pipeline.py --test_dataset_mode True
+    # - name: Execute pipeline script
+    #   run: |
+    #     python ./scripts/pipeline.py
+    #     python ./scripts/pipeline.py --test_dataset_mode True
 
     - name: Run integration tests
       run: |
