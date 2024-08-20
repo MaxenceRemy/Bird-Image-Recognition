@@ -54,9 +54,9 @@ jobs:
           exit 1
         fi
 
-    # - name: Execute pipeline script
-    #   run: |
-    #     python ./scripts/pipeline.py
+    - name: Execute pipeline script
+      run: |
+        python ./scripts/pipeline.py
     #     python ./scripts/pipeline.py --test_dataset_mode True
 
     - name: Run integration tests
@@ -65,7 +65,7 @@ jobs:
 
     - name: Run Flake8
       run: |
-        flake8 src
+        flake8 .
             
     # - name: Upload test results
     #   uses: actions/upload-artifact@v2
