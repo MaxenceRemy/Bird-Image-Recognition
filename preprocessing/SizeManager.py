@@ -4,8 +4,8 @@ import os
 import csv
 from tqdm import tqdm
 from PIL import Image
-from PIL.ExifTags import TAGS
 import numpy as np
+
 
 class SizeManager:
     def __init__(self, db_to_clean_path, target_size=(224, 224)):
@@ -28,26 +28,46 @@ class SizeManager:
     def get_one_bird_infos(self, birdName, fullSetPath, setPath, writer):
         # Recupere et inscrit dans le csv les infos pour un oiseau (une classe)
         bird_path = os.path.join(fullSetPath, birdName)
-        new_bird_path = ' '.join(bird_path.split())
+        new_bird_path = " ".join(bird_path.split())
         shutil.move(bird_path, new_bird_path)
         bird_path = new_bird_path
         birdImagesList = os.listdir(bird_path)
         for file in birdImagesList:
-            birdName = ' '.join(birdName.split())
+            birdName = " ".join(birdName.split())
             try:
                 infos = self.getImagesInfos(os.path.join(bird_path, file))
-            except:
+            except Exception:
                 print("zbra")
-            writer.writerow([setPath, birdName, file, infos['Size'],
-                            infos['Height'], infos['Width'],
-                            infos['Format'], infos['Mode']])
+            writer.writerow(
+                [
+                    setPath,
+                    birdName,
+                    file,
+                    infos["Size"],
+                    infos["Height"],
+                    infos["Width"],
+                    infos["Format"],
+                    infos["Mode"],
+                ]
+            )
 
     def generate_metadata_csv(self, filename):
         # Fonction générant un csv qui présente les metadatas de trois set
         print("Génération du csv de référence")
-        with open(filename, 'w', newline='') as f:
+        with open(filename, "w", newline="") as f:
             writer = csv.writer(f, delimiter=",")
-            writer.writerow(["set", "birdName", "filename", "size", "height", "width", "format", "mode"])
+            writer.writerow(
+                [
+                    "set",
+                    "birdName",
+                    "filename",
+                    "size",
+                    "height",
+                    "width",
+                    "format",
+                    "mode",
+                ]
+            )
             for setPath in os.listdir(self.db_to_clean_path):
                 fullSetPath = os.path.join(self.db_to_clean_path, setPath)
                 if os.path.isfile(fullSetPath):
@@ -66,15 +86,19 @@ class SizeManager:
         return filename
 
     def check_images_size(self, df):
-        df_to_resize = df[df['size'] != str(self.target_size)]
-        for birdName in df_to_resize['birdName'].unique():
-            df_birdName = df_to_resize[df_to_resize['birdName'] == birdName]
-            df_birdName.loc[:, 'ratio_size'] = np.abs(df_birdName['height'] / df_birdName['width'])
-            df_birdName.loc[:, 'ratio_size_close_to_1'] = 1 - df_birdName['ratio_size'] < 0.2
+        df_to_resize = df[df["size"] != str(self.target_size)]
+        for birdName in df_to_resize["birdName"].unique():
+            df_birdName = df_to_resize[df_to_resize["birdName"] == birdName]
+            df_birdName.loc[:, "ratio_size"] = np.abs(df_birdName["height"] / df_birdName["width"])
+            df_birdName.loc[:, "ratio_size_close_to_1"] = 1 - df_birdName["ratio_size"] < 0.2
 
             # Calculate value counts for True and False values
-            true_count = df_birdName[df_birdName['ratio_size_close_to_1'] == True]['ratio_size_close_to_1'].value_counts()
-            false_count = df_birdName[df_birdName['ratio_size_close_to_1'] == False]['ratio_size_close_to_1'].value_counts()
+            true_count = df_birdName[df_birdName["ratio_size_close_to_1"]][
+                "ratio_size_close_to_1"
+            ].value_counts()
+            false_count = df_birdName[not df_birdName["ratio_size_close_to_1"]][
+                "ratio_size_close_to_1"
+            ].value_counts()
 
             # Safely access the counts
             nb_true = true_count.iloc[0] if not true_count.empty else 0
@@ -92,11 +116,11 @@ class SizeManager:
         # Toutes les images qui n'ont pas la taille cible sont redimmensionnées
         # ATTENTION : A faire après avoir réaliser les éventuel suppression de classe
         print("Début du redimensionnement vers la dimension : ", str(self.target_size))
-        df_to_resize = df[df['size'] != str((224, 224))]
+        df_to_resize = df[df["size"] != str((224, 224))]
         count = 0
-        for set_name, birdname, filename in zip(df_to_resize['set'],
-                                                df_to_resize['birdName'],
-                                                df_to_resize['filename']):
+        for set_name, birdname, filename in zip(
+            df_to_resize["set"], df_to_resize["birdName"], df_to_resize["filename"]
+        ):
 
             img_path = os.path.join(self.db_to_clean_path, set_name, birdname, filename)
             if not os.path.isfile(img_path):
@@ -112,9 +136,9 @@ class SizeManager:
         print("Début de la suppression des classes non exploitables")
         # Suppression de toute les classes spécifiée dans le df
         self.check_images_size(df)
-        df_to_delete = df[df['birdName'].isin(self.classes_to_del_list)]
+        df_to_delete = df[df["birdName"].isin(self.classes_to_del_list)]
         for dir in os.listdir(self.db_to_clean_path):
-            for birdName in df_to_delete['birdName'].unique():
+            for birdName in df_to_delete["birdName"].unique():
                 pathToDel = os.path.join(self.db_to_clean_path, dir, birdName)
                 print("Suppression : ", pathToDel)
                 if os.path.isdir(pathToDel):

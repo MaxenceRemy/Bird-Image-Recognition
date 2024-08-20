@@ -54,9 +54,9 @@ jobs:
       run: |
         python -m unittest discover -v -s tests/integration
 
-    # - name: Run Flake8
-    #   run: |
-    #     flake8 .
+    - name: Run Flake8
+      run: |
+        flake8 .
             
     # - name: Upload test results
     #   uses: actions/upload-artifact@v2

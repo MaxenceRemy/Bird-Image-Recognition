@@ -5,17 +5,18 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from_email = os.getenv('ALERT_EMAIL')
-password = os.getenv('EMAIL_PASSWORD')
-to_email = os.getenv('RECIPIENT_EMAIL')
+from_email = os.getenv("ALERT_EMAIL")
+password = os.getenv("EMAIL_PASSWORD")
+to_email = os.getenv("RECIPIENT_EMAIL")
 smtp_server = "smtp.gmail.com"
 smtp_port = 465  # Port pour SSL
 
+
 def send_alert(subject, message):
     msg = MIMEText(message)
-    msg['Subject'] = subject
-    msg['From'] = from_email
-    msg['To'] = to_email
+    msg["Subject"] = subject
+    msg["From"] = from_email
+    msg["To"] = to_email
 
     try:
         with smtplib.SMTP_SSL(smtp_server, smtp_port) as server:
@@ -28,6 +29,7 @@ def send_alert(subject, message):
         print(f"Erreur lors de l'envoi de l'alerte : {str(e)}")
         return False
 
+
 # Test en dehors du cadre unitaire
-if __name__ == '__main__':
+if __name__ == "__main__":
     send_alert("Test Subject", "Test Message")

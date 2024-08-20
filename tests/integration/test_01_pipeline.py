@@ -1,32 +1,43 @@
 import unittest
 import os
 import sys
-import mlflow
 from unittest.mock import patch, MagicMock
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from scripts.pipeline import run_pipeline
 
+
 class TestPipeline(unittest.TestCase):
-    @patch('scripts.pipeline.mlflow')
-    @patch('scripts.pipeline.train_model')
-    @patch('scripts.pipeline.DataManager')
-    @patch('scripts.pipeline.DriftMonitor')
-    @patch('scripts.pipeline.PerformanceTracker')
-    @patch('scripts.pipeline.AlertSystem')
-    @patch('scripts.pipeline.predictClass')
-    @patch('scripts.pipeline.preprocess_data')
-    def test_run_pipeline(self, mock_preprocess_data, mock_predictClass, mock_AlertSystem, 
-                          mock_PerformanceTracker, mock_DriftMonitor, mock_DataManager, 
-                          mock_train_model, mock_mlflow):
+    @patch("scripts.pipeline.mlflow")
+    @patch("scripts.pipeline.train_model")
+    @patch("scripts.pipeline.DataManager")
+    @patch("scripts.pipeline.DriftMonitor")
+    @patch("scripts.pipeline.PerformanceTracker")
+    @patch("scripts.pipeline.AlertSystem")
+    @patch("scripts.pipeline.predictClass")
+    @patch("scripts.pipeline.preprocess_data")
+    def test_run_pipeline(
+        self,
+        mock_preprocess_data,
+        mock_predictClass,
+        mock_AlertSystem,
+        mock_PerformanceTracker,
+        mock_DriftMonitor,
+        mock_DataManager,
+        mock_train_model,
+        mock_mlflow,
+    ):
         # Configuration des mocks
         mock_mlflow.get_experiment_by_name.return_value = None
         mock_mlflow.create_experiment.return_value = "1"
         mock_train_model.return_value = (MagicMock(), False)
 
         mock_data_manager = MagicMock()
-        mock_data_manager.load_new_data.return_value = [("/path/to/image1.jpg", "class1"), ("/path/to/image2.jpg", "class2")]
+        mock_data_manager.load_new_data.return_value = [
+            ("/path/to/image1.jpg", "class1"),
+            ("/path/to/image2.jpg", "class2"),
+        ]
         mock_data_manager.get_class_names.return_value = ["class1", "class2"]
         mock_DataManager.return_value = mock_data_manager
 
@@ -35,7 +46,10 @@ class TestPipeline(unittest.TestCase):
         mock_predictClass.return_value = mock_predictor
 
         mock_performance_tracker = MagicMock()
-        mock_performance_tracker.get_performance_metrics.return_value = (0.85, {"class1": 0.9, "class2": 0.8})
+        mock_performance_tracker.get_performance_metrics.return_value = (
+            0.85,
+            {"class1": 0.9, "class2": 0.8},
+        )
         mock_PerformanceTracker.return_value = mock_performance_tracker
 
         mock_drift_monitor = MagicMock()
@@ -67,5 +81,6 @@ class TestPipeline(unittest.TestCase):
 
         print("Test de la pipeline réussi!")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

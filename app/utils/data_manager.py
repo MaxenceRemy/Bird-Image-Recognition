@@ -1,14 +1,15 @@
 import os
 from app.utils.logger import setup_logger
 
-logger = setup_logger('data_manager', 'logs/data_manager.log')
+logger = setup_logger("data_manager", "logs/data_manager.log")
+
 
 class DataManager:
-    def __init__(self, data_dir='data'):
+    def __init__(self, data_dir="data"):
         self.data_dir = data_dir
-        self.train_dir = os.path.join(data_dir, 'train')
-        self.valid_dir = os.path.join(data_dir, 'valid')
-        self.test_dir = os.path.join(data_dir, 'test')
+        self.train_dir = os.path.join(data_dir, "train")
+        self.valid_dir = os.path.join(data_dir, "valid")
+        self.test_dir = os.path.join(data_dir, "test")
 
     def get_class_names(self):
         logger.info("Récupération des noms de classes")
@@ -21,7 +22,7 @@ class DataManager:
         image_paths = []
         for root, _, files in os.walk(self.test_dir):
             for file in files:
-                if file.lower().endswith(('.png', '.jpg', '.jpeg')):
+                if file.lower().endswith((".png", ".jpg", ".jpeg")):
                     image_path = os.path.join(root, file)
                     true_class = os.path.basename(os.path.dirname(image_path))
                     image_paths.append((image_path, true_class))

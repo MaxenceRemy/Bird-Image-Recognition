@@ -3,7 +3,8 @@ import time
 from pipeline import run_pipeline
 from app.utils.logger import setup_logger
 
-logger = setup_logger('scheduler', 'logs/scheduler.log')
+logger = setup_logger("scheduler", "logs/scheduler.log")
+
 
 def job():
     logger.info("Exécution planifiée de la pipeline...")
@@ -12,6 +13,7 @@ def job():
         logger.info("Exécution de la pipeline terminée avec succès.")
     except Exception as e:
         logger.error(f"Erreur lors de l'exécution de la pipeline : {str(e)}")
+
 
 if __name__ == "__main__":
     logger.info("Configuration du planificateur...")
