@@ -20,3 +20,4 @@ GPUtil
 httpx
 kaggle
 python-multipart
+flake8
