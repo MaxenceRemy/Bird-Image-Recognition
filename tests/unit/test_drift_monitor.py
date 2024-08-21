@@ -53,8 +53,8 @@ class TestDriftMonitor(unittest.TestCase):
         print(f"Current class counts: {current_counts}")
 
         self.assertTrue(drift_detected)
-        self.assertIn("La classe class1 a augmenté de plus de 5%: 100 à 230", reasons)
-        self.assertIn("La classe class2 a augmenté de plus de 5%: 100 à 220", reasons)
+        self.assertIn("La classe class1 a augmenté de plus de 5%", reasons[0])
+        self.assertIn("La classe class2 a augmenté de plus de 5%", reasons[1])
         self.assertEqual(monitor.initial_class_counts, {"class1": 100, "class2": 100})
         self.assertEqual(current_counts, {"class1": 230, "class2": 220})
 

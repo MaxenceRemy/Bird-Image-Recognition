@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+import json
 from datetime import datetime, timedelta
 import numpy as np
 from app.utils.logger import setup_logger
@@ -24,6 +25,7 @@ class DriftMonitor:
                 class_counts[class_name] = len(
                     [f for f in os.listdir(class_path) if os.path.isfile(os.path.join(class_path, f))]
                 )
+        logger.info(f"Comptages initiaux des classes : {class_counts}")
         return class_counts
 
     def get_current_log_file(self):
@@ -44,6 +46,7 @@ class DriftMonitor:
 
         # Calculer les comptes de classes à partir du fichier de log
         current_class_counts = df["predicted_class"].value_counts().to_dict()
+        logger.info(f"Comptages actuels des classes : {current_class_counts}")
 
         for class_name, initial_count in self.initial_class_counts.items():
             current_count = current_class_counts.get(class_name, 0)
@@ -64,6 +67,7 @@ class DriftMonitor:
         if not recent_df.empty:
             recent_confidence = recent_df["confidence"].mean()
             past_confidence = df[df["date"] < recent_df["date"].min()]["confidence"].mean()
+            logger.info(f"Confiance récente: {recent_confidence}, Confiance passée: {past_confidence}")
             if recent_confidence < past_confidence - self.confidence_drop_threshold:
                 drift_detected = True
                 drift_reasons.append(f"Baisse de confiance: {past_confidence:.2f} à {recent_confidence:.2f}")
@@ -74,3 +78,37 @@ class DriftMonitor:
             logger.info("Aucun drift détecté")
 
         return drift_detected, (drift_reasons if drift_detected else "Aucun drift détecté")
+
+    def save_current_state(self, file_path='drift_monitor_state.json'):
+            state = {
+                'initial_class_counts': self.initial_class_counts,
+                'average_class_size': self.average_class_size,
+                'class_increase_threshold': self.class_increase_threshold,
+                'new_class_threshold': self.new_class_threshold,
+                'confidence_drop_threshold': self.confidence_drop_threshold
+            }
+            with open(file_path, 'w') as f:
+                json.dump(state, f)
+            logger.info(f"État actuel du DriftMonitor sauvegardé dans {file_path}")
+
+    def load_state(self, file_path='drift_monitor_state.json'):
+        if os.path.exists(file_path):
+            with open(file_path, 'r') as f:
+                state = json.load(f)
+            self.initial_class_counts = state['initial_class_counts']
+            self.average_class_size = state['average_class_size']
+            self.class_increase_threshold = state['class_increase_threshold']
+            self.new_class_threshold = state['new_class_threshold']
+            self.confidence_drop_threshold = state['confidence_drop_threshold']
+            logger.info(f"État du DriftMonitor chargé depuis {file_path}")
+        else:
+            logger.warning(f"Fichier d'état {file_path} non trouvé. Utilisation des valeurs par défaut.")
+
+# Si vous voulez tester le DriftMonitor directement
+if __name__ == "__main__":
+    monitor = DriftMonitor()
+    drift_detected, reasons = monitor.check_drift()
+    print(f"Drift détecté: {drift_detected}")
+    print(f"Raisons: {reasons}")
+    print(f"Comptages initiaux des classes: {monitor.initial_class_counts}")
+    
