@@ -50,6 +50,7 @@ class DriftMonitor:
 
         for class_name, initial_count in self.initial_class_counts.items():
             current_count = current_class_counts.get(class_name, 0)
+            logger.info(f"Classe {class_name}: initial={initial_count}, actuel={current_count}")
             if current_count > initial_count * self.class_increase_threshold:
                 drift_detected = True
                 drift_reasons.append(
@@ -111,4 +112,3 @@ if __name__ == "__main__":
     print(f"Drift détecté: {drift_detected}")
     print(f"Raisons: {reasons}")
     print(f"Comptages initiaux des classes: {monitor.initial_class_counts}")
-    
