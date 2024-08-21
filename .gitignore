@@ -12,3 +12,5 @@ venv/
 streamlit_env/
 __pycache__/
 # Exceptions
+!README.md
+!**/README.md

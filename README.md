@@ -9,7 +9,6 @@ Ce projet implémente un système de reconnaissance d'oiseaux basé sur des imag
     - [Utils](./app/utils/) Scripts utilitaires de l'application
 - [Data](./data/) Données relatives au dataset d'entrainement du modèle
 - [Documentation](./docs/) Documentation détaillée du projet
-- [Inference](./inference/) Fonction de prédiction utilisée dans les phases de tests
 - [Logs](./logs/) Historique des logs générés pendant l'exécution des différents scripts
 - [MLRuns](./mlruns/) Historique des runs MLflow
 - [Models](./models/) Historique des modèles
@@ -30,11 +29,11 @@ Ce projet implémente un système de reconnaissance d'oiseaux basé sur des imag
 
 ## Utilisation
 
-- Pour télécharger le dataset : `python scripts/downloadDataset.py`
-- Pour effectuer le traitement obligatoire des données : `python preprocessing/preprocess_dataset.py`
-- Pour entraîner le modèle : `python training/train_model.py`
-- Pour lancer l'interface Streamlit : `streamlit run streamlit_app.py`
 - Pour exécuter la pipeline complète : `python scripts/pipeline.py`
+    - Pour télécharger le dataset : `python scripts/downloadDataset.py`
+    - Pour effectuer le traitement obligatoire des données : `python preprocessing/preprocess_dataset.py`
+    - Pour entraîner le modèle : `python training/train_model.py`
+- Pour lancer l'interface Streamlit : `streamlit run streamlit_app.py`
 
 ## Documentation
 

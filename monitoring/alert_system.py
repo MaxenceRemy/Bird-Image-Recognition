@@ -5,21 +5,22 @@ from dotenv import load_dotenv
 from app.utils.logger import setup_logger
 
 load_dotenv()
-logger = setup_logger('alert_system', 'logs/alert_system.log')
+logger = setup_logger("alert_system", "logs/alert_system.log")
+
 
 class AlertSystem:
     def __init__(self):
-        self.from_email = os.getenv('ALERT_EMAIL')
-        self.password = os.getenv('EMAIL_PASSWORD')
-        self.to_email = os.getenv('RECIPIENT_EMAIL')
+        self.from_email = os.getenv("ALERT_EMAIL")
+        self.password = os.getenv("EMAIL_PASSWORD")
+        self.to_email = os.getenv("RECIPIENT_EMAIL")
         self.smtp_server = "smtp.gmail.com"
         self.smtp_port = 465  # Port pour SSL
 
     def send_alert(self, subject, message):
         msg = MIMEText(message)
-        msg['Subject'] = subject
-        msg['From'] = self.from_email
-        msg['To'] = self.to_email
+        msg["Subject"] = subject
+        msg["From"] = self.from_email
+        msg["To"] = self.to_email
 
         try:
             with smtplib.SMTP_SSL(self.smtp_server, self.smtp_port) as server:
