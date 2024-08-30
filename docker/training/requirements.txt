@@ -1,0 +1,13 @@
+numpy
+pillow
+scipy
+tensorflow
+fastapi
+uvicorn
+python-dotenv
+PyJWT
+schedule
+mlflow
+scikit-learn
+psutil
+GPUtil

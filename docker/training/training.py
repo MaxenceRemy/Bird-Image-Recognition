@@ -1,0 +1,219 @@
+import sys
+import os
+
+from fastapi.responses import JSONResponse
+import mlflow
+import mlflow.keras
+import numpy as np
+import tensorflow as tf
+from tensorflow.keras.applications import EfficientNetB0
+from tensorflow.keras.layers import Dropout, GlobalAveragePooling2D, Dense
+from tensorflow.keras.callbacks import ReduceLROnPlateau, EarlyStopping, Callback
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras import Model
+from tensorflow.keras.optimizers import Adam
+from timeit import default_timer as timer
+from datetime import datetime
+from contextlib import nullcontext
+from fastapi import FastAPI, HTTPException, BackgroundTasks
+import logging
+import mlflow
+from mlflow.tracking import MlflowClient
+import shutil
+import json
+
+app = FastAPI()
+
+volume_path = 'volume_data'
+log_folder = os.path.join(volume_path, "logs")
+state_folder = os.path.join(volume_path, "containers_state")
+os.makedirs(state_folder, exist_ok = True)
+state_path = os.path.join(state_folder, "training_state.txt")
+preprocessing_state_path = os.path.join(state_folder, "preprocessing_state.txt")
+with open(state_path, "w") as file:
+    file.write("0")
+dataset_folder = os.path.join(volume_path, "dataset_clean")
+os.makedirs(log_folder, exist_ok = True)
+logging.basicConfig(filename=os.path.join(log_folder, "training.log"), level=logging.INFO, 
+                    format='%(asctime)s %(levelname)s %(message)s', 
+                    datefmt='%d/%m/%Y %I:%M:%S %p')
+
+mlruns_path = os.path.join(volume_path, 'mlruns')
+if not os.path.exists(mlruns_path):
+    shutil.copytree('./mlruns', mlruns_path)
+    shutil.copy('./prod_model_id.txt', mlruns_path)
+else:
+    shutil.rmtree('./mlruns')
+
+mlflow.set_tracking_uri("file:///home/app/volume_data/mlruns")
+client = MlflowClient()
+
+class TimingCallback(Callback):
+    def __init__(self, logs={}):
+        self.logs=[]
+    def on_epoch_begin(self, epoch, logs={}):
+        self.starttime = timer()
+    def on_epoch_end(self, epoch, logs={}):
+        self.logs.append(timer()-self.starttime)
+
+def train_model():
+
+    with open(state_path, "w") as file:
+        file.write("1")
+
+    mlflow.set_experiment("Bird Classification Training")
+
+    with mlflow.start_run():
+        # Définition du chemin vers le dataset
+
+        mlflow.keras.autolog(log_models=False)
+        
+        train_path = os.path.join(dataset_folder, "train")
+        valid_path = os.path.join(dataset_folder, "valid")
+        test_path = os.path.join(dataset_folder, "test")
+
+        # Vérification de l'existence des dossiers
+        for path in [dataset_folder, train_path, valid_path, test_path]:
+            if not os.path.exists(path):
+                logging.error(f"Le dossier {path} n'existe pas.")
+                raise FileNotFoundError(f"Le dossier {path} n'existe pas.")
+
+        logging.info(f"Chemin d'entraînement : {train_path}")
+        logging.info(f"Chemin actuel : {os.getcwd()}")
+
+        # Définition de la batch size
+        batch_size = 16
+        mlflow.log_param("batch_size", batch_size)
+
+        # Définition des callbacks
+        reduce_learning_rate = ReduceLROnPlateau(monitor="val_loss", patience=2, min_delta=0.01, factor=0.1, cooldown=4, verbose=1)
+        early_stopping = EarlyStopping(patience=5, min_delta=0.01, verbose=1, mode='min', monitor='val_loss')
+        time_callback = TimingCallback()
+
+        # Création des générateurs d'images avec augmentation des données plus agressive
+        train_datagen = ImageDataGenerator(
+            rotation_range=30,
+            width_shift_range=0.2,
+            height_shift_range=0.2,
+            horizontal_flip=True,
+            vertical_flip=True,
+            zoom_range=0.2,
+            shear_range=0.2,
+            fill_mode='nearest')
+        train_generator = train_datagen.flow_from_directory(train_path, target_size=(224, 224), batch_size=batch_size)
+        valid_generator = ImageDataGenerator().flow_from_directory(valid_path, target_size=(224, 224), batch_size=batch_size)
+        test_generator = ImageDataGenerator().flow_from_directory(test_path, target_size=(224, 224), batch_size=batch_size)
+
+        # Récupération du nombre de classes
+        num_classes = train_generator.num_classes
+        indices_classes_raw = train_generator.class_indices
+        indices_classes = {}
+        for classe in indices_classes_raw:
+            indices_classes[indices_classes_raw[classe]] = classe
+        classes_file_path = './classes.json'
+        with open(classes_file_path, 'w') as json_file:
+            json.dump(indices_classes, json_file)
+        mlflow.log_artifact(classes_file_path, artifact_path="model")
+        os.remove(classes_file_path)
+        mlflow.log_param("num_classes", num_classes)
+
+        # On se base sur le modèle pré-entrainé EfficientNetB0
+        base_model = EfficientNetB0(weights='imagenet', include_top=False)
+
+        # On dégèle les 20 dernières couches pour affiner le modèle
+        for layer in base_model.layers[:-20]:
+            layer.trainable = False
+        for layer in base_model.layers[-20:]:
+            layer.trainable = True
+
+        # On ajoute nos couches
+        x = base_model.output
+        x = GlobalAveragePooling2D()(x)
+        x = Dense(1280, activation='relu')(x) 
+        x = Dropout(rate=0.2)(x)
+        x = Dense(640, activation='relu')(x)  
+        x = Dropout(rate=0.2)(x)
+        predictions = Dense(num_classes, activation='softmax')(x)
+        model = Model(inputs=base_model.input, outputs=predictions)
+
+        # Compilation du modèle avec un optimiseur Adam et un learning rate adaptatif
+        optimizer = Adam(learning_rate=0.001)
+        model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['acc', 'mean_absolute_error'])
+
+        # Entraînement du modèle
+        training_history = model.fit(train_generator,
+                            epochs=1,
+                            steps_per_epoch=train_generator.samples//train_generator.batch_size,
+                            validation_data=valid_generator,
+                            validation_steps=valid_generator.samples//valid_generator.batch_size,
+                            callbacks=[reduce_learning_rate, early_stopping, time_callback], 
+                            verbose=1)
+
+        # Évaluation du modèle sur le set de test
+        test_loss, test_accuracy, test_mae = model.evaluate(test_generator)
+        
+        logging.info(f"Test accuracy: {test_accuracy}")
+        logging.info(f"Final validation accuracy: {training_history.history['val_acc'][-1]}")
+
+        # timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        # Sauvegarde des poids du modèle au format h5
+        # model.save_weights(os.path.join(archived_models_folder, f'saved_model_{timestamp}.h5'))
+
+        # Sauvegarde du modèle au format h5
+        
+        model_save_path = f'saved_model.h5'
+        model.save(model_save_path)
+        mlflow.log_artifact(model_save_path, artifact_path="model")
+        os.remove(model_save_path)
+        # mlflow.tensorflow.log_model(model, artifact_path=f"model_{timestamp}")
+        logging.info(f"Model sucessfuly saved in mlruns folder")
+
+
+        mlflow.end_run()
+
+        with open(state_path, "w") as file:
+            file.write("0")
+
+
+@app.get("/")
+def read_root():
+    return {"Status": "OK"}
+
+@app.get("/train")
+async def train(background_tasks: BackgroundTasks):
+    try:
+        with open(preprocessing_state_path, "r") as file:
+            preprocessing_state = file.read()
+        with open(state_path, "r") as file:
+            state = file.read()
+        if preprocessing_state == "0" and state == "0" and len(os.listdir(dataset_folder)) > 1:
+            background_tasks.add_task(train_model)
+            return "Entraînement du modèle lancé, merci d'attende le mail indiquant le succès de la tâche."
+        else:
+            return "Un preprocessing ou en entraînement est en cours, merci de revenir plus tard."
+    
+    except Exception as e:
+        logging.error(f'Failed to train the model: {e}')
+        raise HTTPException(status_code=500, detail="Internal server error")
+    
+@app.get("/results")
+async def results():
+    try:
+        experiment_id = '157975935045122495'
+        runs = client.search_runs(experiment_id)
+
+        latest_run = runs[0]
+        latest_run_id = latest_run.info.run_id
+        latest_run_val_accuracy = latest_run.data.metrics.get('final_val_accuracy')
+        with open(os.path.join(mlruns_path, 'prod_model_id.txt'), 'r') as file:
+            main_model_run_id = file.read()
+        main_model_run = client.get_run(main_model_run_id)
+        main_model_val_accuracy = main_model_run.data.metrics.get('final_val_accuracy')
+        
+        return {"latest_run_id": latest_run_id, "latest_run_val_accuracy": latest_run_val_accuracy, 
+                "main_model_run_id": main_model_run_id, "main_model_val_accuracy": main_model_val_accuracy}
+    
+    except Exception as e:
+        logging.error(f'Failed to get the last run ID: {e}')
+        raise HTTPException(status_code=500, detail="Internal server error")
+

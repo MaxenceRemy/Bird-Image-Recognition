@@ -1,0 +1,8 @@
+{
+    "Yoni": [true, "toto"],
+    "Guillaume": [true, "toto"],
+    "Jihane": [true, "toto"],
+    "Maxence": [true, "titeuf"],
+    "toto": [true, "toto"],
+    "Tintin": [false, "milou"]
+}

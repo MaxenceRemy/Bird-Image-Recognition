@@ -1,0 +1,9 @@
+fastapi
+pydantic
+PyJWT
+pandas
+requests
+python-dotenv
+typing
+uvicorn
+python-multipart
