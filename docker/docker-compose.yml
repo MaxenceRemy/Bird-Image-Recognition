@@ -35,37 +35,37 @@ services:
     volumes:
       - main_volume:/home/app/volume_data
 
-  inference:
-    build:
-      context: ./inference
-      dockerfile: Dockerfile
-    image: inference:latest
-    container_name: inference
-    volumes:
-      - main_volume:/home/app/volume_data
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+  # inference:
+  #   build:
+  #     context: ./inference
+  #     dockerfile: Dockerfile
+  #   image: inference:latest
+  #   container_name: inference
+  #   volumes:
+  #     - main_volume:/home/app/volume_data
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: 1
+  #             capabilities: [gpu]
 
-  training:
-    build:
-      context: ./training
-      dockerfile: Dockerfile
-    image: training:latest
-    container_name: training
-    volumes:
-      - main_volume:/home/app/volume_data
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+  # training:
+  #   build:
+  #     context: ./training
+  #     dockerfile: Dockerfile
+  #   image: training:latest
+  #   container_name: training
+  #   volumes:
+  #     - main_volume:/home/app/volume_data
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: 1
+  #             capabilities: [gpu]
 
   preprocessing:
     build:
@@ -80,25 +80,25 @@ services:
     volumes:
       - main_volume:/home/app/volume_data
 
-  monitoring:
-    build:
-      context: ./monitoring
-      dockerfile: Dockerfile
-    image: monitoring:latest
-    container_name: monitoring
-    environment:
-      - ALERT_EMAIL=yoniedery26@gmail.com
-      - EMAIL_PASSWORD=qzsh hkpz ytaa oevw
-      - RECIPIENT_EMAIL=ruizguillaume05@gmail.com
-    volumes:
-      - main_volume:/home/app/volume_data
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+  # monitoring:
+  #   build:
+  #     context: ./monitoring
+  #     dockerfile: Dockerfile
+  #   image: monitoring:latest
+  #   container_name: monitoring
+  #   environment:
+  #     - ALERT_EMAIL=yoniedery26@gmail.com
+  #     - EMAIL_PASSWORD=qzsh hkpz ytaa oevw
+  #     - RECIPIENT_EMAIL=ruizguillaume05@gmail.com
+  #   volumes:
+  #     - main_volume:/home/app/volume_data
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: 1
+  #             capabilities: [gpu]
 
   mlflowui:
     build:
