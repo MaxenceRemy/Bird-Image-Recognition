@@ -33,8 +33,10 @@ jobs:
     #     mlflow server --backend-store-uri sqlite:///mlflow.db --default-artifact-root ./mlruns &
 
 
-    - name: Run docker compose
+    - name: Set up Docker
       uses: docker/setup-buildx-action@v2
+
+    - name: Run docker compose
       run: |
         docker-compose -f docker/docker-compose.yml up
 
