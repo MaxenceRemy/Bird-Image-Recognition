@@ -35,7 +35,11 @@ jobs:
     - name: Run Flake8
       run: |
         flake8 .
-        
+
+    - name: Run docker compose
+      run: |
+        docker-compose -f docker/docker-compose.yml up
+
     - name: Run unit tests
       run: |
         python -m unittest discover -v -s tests/unit
