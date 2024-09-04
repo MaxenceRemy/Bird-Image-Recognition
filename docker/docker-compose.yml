@@ -73,48 +73,48 @@ services:
     volumes:
       - main_volume:/home/app/volume_data
 
-  monitoring:
-    build:
-      context: ./monitoring
-      dockerfile: Dockerfile
-    image: monitoring:latest
-    container_name: monitoring
-    environment:
-      - ALERT_EMAIL=yoniedery26@gmail.com
-      - EMAIL_PASSWORD=qzsh hkpz ytaa oevw
-      - RECIPIENT_EMAIL=ruizguillaume05@gmail.com
-    volumes:
-      - main_volume:/home/app/volume_data
+  # monitoring:
+  #   build:
+  #     context: ./monitoring
+  #     dockerfile: Dockerfile
+  #   image: monitoring:latest
+  #   container_name: monitoring
+  #   environment:
+  #     - ALERT_EMAIL=yoniedery26@gmail.com
+  #     - EMAIL_PASSWORD=qzsh hkpz ytaa oevw
+  #     - RECIPIENT_EMAIL=ruizguillaume05@gmail.com
+  #   volumes:
+  #     - main_volume:/home/app/volume_data
 
-  mlflowui:
-    build:
-      context: ./mlflowui
-      dockerfile: Dockerfile
-    image: mlflowui:latest
-    container_name: mlflowui
-    ports:
-      - target: 5200
-        published: 5200
-        protocol: tcp
-        mode: host
-    volumes:
-      - main_volume:/home/app/volume_data
+  # mlflowui:
+  #   build:
+  #     context: ./mlflowui
+  #     dockerfile: Dockerfile
+  #   image: mlflowui:latest
+  #   container_name: mlflowui
+  #   ports:
+  #     - target: 5200
+  #       published: 5200
+  #       protocol: tcp
+  #       mode: host
+  #   volumes:
+  #     - main_volume:/home/app/volume_data
 
-  streamlit:
-    build:
-      context: ./streamlit
-      dockerfile: Dockerfile
-    image: streamlit:latest
-    container_name: streamlit
-    environment:
-      - STREAMLIT_SERVER_PORT=5300
-    ports:
-      - target: 5300
-        published: 5300
-        protocol: tcp
-        mode: host
-    volumes:
-      - main_volume:/home/app/volume_data
+  # streamlit:
+  #   build:
+  #     context: ./streamlit
+  #     dockerfile: Dockerfile
+  #   image: streamlit:latest
+  #   container_name: streamlit
+  #   environment:
+  #     - STREAMLIT_SERVER_PORT=5300
+  #   ports:
+  #     - target: 5300
+  #       published: 5300
+  #       protocol: tcp
+  #       mode: host
+  #   volumes:
+  #     - main_volume:/home/app/volume_data
 
 volumes:
   main_volume:
