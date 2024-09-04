@@ -32,13 +32,13 @@ jobs:
     #   run: |
     #     mlflow server --backend-store-uri sqlite:///mlflow.db --default-artifact-root ./mlruns &
 
-    - name: Run Flake8
-      run: |
-        flake8 .
-
     - name: Run docker compose
       run: |
         docker-compose -f docker/docker-compose.yml up
+
+    - name: Run Flake8
+      run: |
+        flake8 .
 
     - name: Run unit tests
       run: |
