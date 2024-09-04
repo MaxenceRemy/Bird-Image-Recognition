@@ -45,8 +45,8 @@ jobs:
         sudo chmod +x /usr/local/bin/docker-compose
         docker-compose --version
 
-    - name: Build Docker images
-      run: docker-compose -f ./docker/docker-compose.yml build
+    # - name: Build Docker images
+    #   run: docker-compose -f ./docker/docker-compose.yml build
 
     - name: Run docker-compose
       uses: hoverkraft-tech/compose-action@v2.0.1
