@@ -1,11 +1,9 @@
-import sys
 import os
-
-from fastapi.responses import JSONResponse
+import pandas as pd
 import mlflow
 import mlflow.keras
 import numpy as np
-import tensorflow as tf
+from sklearn.metrics import confusion_matrix
 from tensorflow.keras.applications import EfficientNetB0
 from tensorflow.keras.layers import Dropout, GlobalAveragePooling2D, Dense
 from tensorflow.keras.callbacks import ReduceLROnPlateau, EarlyStopping, Callback
@@ -13,8 +11,6 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras import Model
 from tensorflow.keras.optimizers import Adam
 from timeit import default_timer as timer
-from datetime import datetime
-from contextlib import nullcontext
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 import logging
 import mlflow
@@ -27,6 +23,7 @@ app = FastAPI()
 volume_path = 'volume_data'
 log_folder = os.path.join(volume_path, "logs")
 state_folder = os.path.join(volume_path, "containers_state")
+experiment_id = "157975935045122495"
 os.makedirs(state_folder, exist_ok = True)
 state_path = os.path.join(state_folder, "training_state.txt")
 preprocessing_state_path = os.path.join(state_folder, "preprocessing_state.txt")
@@ -151,16 +148,11 @@ def train_model():
 
         # Évaluation du modèle sur le set de test
         test_loss, test_accuracy, test_mae = model.evaluate(test_generator)
-        
+
         logging.info(f"Test accuracy: {test_accuracy}")
         logging.info(f"Final validation accuracy: {training_history.history['val_acc'][-1]}")
 
-        # timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        # Sauvegarde des poids du modèle au format h5
-        # model.save_weights(os.path.join(archived_models_folder, f'saved_model_{timestamp}.h5'))
-
         # Sauvegarde du modèle au format h5
-        
         model_save_path = f'saved_model.h5'
         model.save(model_save_path)
         mlflow.log_artifact(model_save_path, artifact_path="model")
@@ -168,12 +160,72 @@ def train_model():
         # mlflow.tensorflow.log_model(model, artifact_path=f"model_{timestamp}")
         logging.info(f"Model sucessfuly saved in mlruns folder")
 
+        generate_confusion_matrix(test_generator, model)
 
         mlflow.end_run()
 
         with open(state_path, "w") as file:
             file.write("0")
 
+
+def generate_confusion_matrix(test_generator, model):
+    """
+    Génére la matrice de confusion (et métriques de recall, precision, et f1-score) pour le modèle
+    """
+    predictions = model.predict(test_generator)
+    predicted_classes = np.argmax(predictions, axis=1)
+
+    # Obtenir les labels des classes réelles
+    true_classes = test_generator.classes
+    class_labels = list(test_generator.class_indices.keys())
+
+    # Créer la matrice de confusion
+    conf_matrix = confusion_matrix(true_classes, predicted_classes)
+
+    # Ajout des metriques au DataFrame
+    confusion_df = pd.DataFrame(conf_matrix, index=class_labels, columns=class_labels)
+    confusion_df = add_metrics(confusion_df)
+
+    # Enregistrement de la matrice de confusion
+    confusion_df.to_csv("./initial_confusion_matrix.csv")
+    mlflow.log_artifact("./initial_confusion_matrix.csv")
+    os.remove("./initial_confusion_matrix.csv")
+  
+
+def add_metrics(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Ajout au DataFrame des métriques de precision, recall et f1-score
+    """
+    df["Precision"] = df.apply(
+        lambda row: np.where(df[row.name].sum() != 0, 
+                            df.loc[row.name, row.name] / df[row.name].sum(), 
+                            0), 
+        axis=1)
+
+    df["Recall"] = df.apply(
+        lambda row: np.where(df.loc[row.name].sum() != 0, 
+                            df.loc[row.name, row.name] / df.loc[row.name].sum(), 
+                            0), 
+        axis=1)
+
+    df["f1-score"] = df.apply(
+        lambda row: np.where((row["Precision"] + row["Recall"]) != 0,
+                            (2 * row["Precision"] * row["Recall"]) / (row["Precision"] + row["Recall"]),
+                            0),
+        axis=1)
+
+    return df
+
+def get_worst_f1_scores(run_id : str):
+    """
+    Renvoie les f1-score et index les plus bas de la matrice de confusion d'une run
+    """
+
+    df = pd.read_csv(f"{mlruns_path}/{experiment_id}/{run_id}/artifacts/initial_confusion_matrix.csv",
+                         index_col=0)
+    worst_values = df.nsmallest(10, 'f1-score')
+    index_and_values = worst_values.index, worst_values['f1-score']
+    return index_and_values
 
 @app.get("/")
 def read_root():
@@ -191,29 +243,49 @@ async def train(background_tasks: BackgroundTasks):
             return "Entraînement du modèle lancé, merci d'attende le mail indiquant le succès de la tâche."
         else:
             return "Un preprocessing ou en entraînement est en cours, merci de revenir plus tard."
-    
+
     except Exception as e:
         logging.error(f'Failed to train the model: {e}')
         raise HTTPException(status_code=500, detail="Internal server error")
-    
+
 @app.get("/results")
 async def results():
+    """
+    Renvoie les métriques du dernier modèle et de celui en production
+    """
     try:
-        experiment_id = '157975935045122495'
-        runs = client.search_runs(experiment_id)
 
+        # Récuperer la run id du dernier modèle
+        runs = client.search_runs(experiment_id)
         latest_run = runs[0]
         latest_run_id = latest_run.info.run_id
-        latest_run_val_accuracy = latest_run.data.metrics.get('final_val_accuracy')
+
+        # Récuperer la run id du modèle en production
         with open(os.path.join(mlruns_path, 'prod_model_id.txt'), 'r') as file:
             main_model_run_id = file.read()
-        main_model_run = client.get_run(main_model_run_id)
-        main_model_val_accuracy = main_model_run.data.metrics.get('final_val_accuracy')
-        
-        return {"latest_run_id": latest_run_id, "latest_run_val_accuracy": latest_run_val_accuracy, 
-                "main_model_run_id": main_model_run_id, "main_model_val_accuracy": main_model_val_accuracy}
-    
-    except Exception as e:
-        logging.error(f'Failed to get the last run ID: {e}')
-        raise HTTPException(status_code=500, detail="Internal server error")
 
+        # Récupérer les métriques et pires f1-scores du dernier modèle
+        latest_run_val_acc = latest_run.data.metrics.get('val_acc')
+        latest_run_val_loss = latest_run.data.metrics.get('val_loss')
+        latest_run_worst_f1_scores = get_worst_f1_scores(latest_run_id)
+
+        # Récupérer les métriques et pires f1-scores du modèle en production
+        main_model_run = client.get_run(main_model_run_id)
+        main_model_val_acc = main_model_run.data.metrics.get('val_acc')
+        main_model_val_loss = main_model_run.data.metrics.get('val_loss')
+        main_model_worst_f1_scores = get_worst_f1_scores(main_model_run_id)
+
+        return {
+            "latest_run_id": latest_run_id,
+            "latest_run_val_accuracy": latest_run_val_acc,
+            "latest_run_val_loss": latest_run_val_loss,
+            "latest_run_worst_f1_scores": zip(latest_run_worst_f1_scores[0], latest_run_worst_f1_scores[1]),
+            "main_model_run_id": main_model_run_id,
+            "main_model_val_accuracy": main_model_val_acc,
+            "main_model_val_loss": main_model_val_loss,
+            "main_model_worst_f1_scores": zip(main_model_worst_f1_scores[0], main_model_worst_f1_scores[1])
+            }
+
+    except Exception as e:
+        logging.error(f"Echec de l'otention de l'id de la dernière run : {e}")
+        raise HTTPException(status_code=500, detail="Erreur de serveur interne")

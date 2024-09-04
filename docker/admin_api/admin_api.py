@@ -10,7 +10,6 @@ from dotenv import load_dotenv
 import logging
 import requests
 import shutil
-# from app.utils.github_uploader import upload_to_github
 
 # Charger les variables d'environnement
 load_dotenv()
@@ -218,11 +217,21 @@ async def results(
     api_key: str = Depends(verify_api_key),
     current_user: str = Depends(verify_token)
 ):
-        
+    logging.info(f"Requête /results reçue de l'utilisateur: {current_user}")
     try:
-        response = requests.get(f'http://training:5500/results')
-        return response.json()
-    
+        logging.info("Tentative de communication avec le conteneur training")
+        response = requests.get(f'http://training:5500/results', timeout=10)
+        logging.info(f"Réponse reçue du conteneur training: status={response.status_code}")
+        if response.status_code == 200:
+            results = response.json()
+            logging.info("Résultats récupérés avec succès")
+            return results
+        else:
+            logging.error(f"Erreur lors de la récupération des résultats: {response.text}")
+            raise HTTPException(status_code=response.status_code, detail=response.text)
     except requests.RequestException as e:
-        logging.error(f'Failed to communicate with the training container: {e}')
-        raise HTTPException(status_code=500, detail="Internal server error")
+        logging.error(f'Erreur de communication avec le conteneur training: {str(e)}')
+        raise HTTPException(status_code=500, detail=f"Erreur de communication avec le conteneur training: {str(e)}")
+    except Exception as e:
+        logging.error(f'Erreur inattendue: {str(e)}')
+        raise HTTPException(status_code=500, detail=f"Erreur inattendue: {str(e)}")

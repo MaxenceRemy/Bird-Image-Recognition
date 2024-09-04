@@ -5,6 +5,7 @@ import csv
 from datetime import datetime
 import os
 import mlflow
+import gpustat
 
 
 class SystemMonitor:
@@ -16,11 +17,14 @@ class SystemMonitor:
         log_dir = os.path.join(volume_path, 'logs/system_monitor')
         os.makedirs(log_dir, exist_ok=True)
 
+        #Récupération du nombre de gpus
+        gpu_counts = len(gpustat.GPUStatCollection.new_query())
+
         self.csv_filename = os.path.join(log_dir, f'system_metrics_{datetime.now().strftime("%d%m%Y_%H%M")}.csv')
         with open(self.csv_filename, "w", newline="") as csvfile:
             writer = csv.writer(csvfile)
-            writer.writerow(
-                [
+
+            columns =  [
                     "Timestamp",
                     "CPU Usage",
                     "Memory Usage",
@@ -30,7 +34,10 @@ class SystemMonitor:
                     "Swap Usage",
                     "Process Count",
                 ]
-            )
+            for i in range(gpu_counts):
+                columns.append(f"GPU_{i} Usage")
+
+            writer.writerow(columns)
 
     def get_metrics(self):
         cpu_usage = psutil.cpu_percent(interval=1)
@@ -39,8 +46,12 @@ class SystemMonitor:
         net_io = psutil.net_io_counters()
         swap_usage = psutil.swap_memory().percent
         process_count = len(psutil.pids())
+        gpus_usage = {}
+        gpus_stats = gpustat.GPUStatCollection.new_query()
+        for i, gpu in enumerate(gpus_stats.gpus):
+            gpus_usage[f"gpu_{i}_usage"] = gpu.utilization
 
-        return {
+        metrics = {
             "cpu_usage": cpu_usage,
             "memory_usage": memory_usage,
             "disk_usage": disk_usage,
@@ -49,6 +60,10 @@ class SystemMonitor:
             "swap_usage": swap_usage,
             "process_count": process_count,
         }
+
+        metrics.update(gpus_usage)
+
+        return metrics
 
     def log_metrics(self, metrics=None, timestamp=None):
         if metrics is None:

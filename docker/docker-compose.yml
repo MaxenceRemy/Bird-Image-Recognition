@@ -43,6 +43,13 @@ services:
     container_name: inference
     volumes:
       - main_volume:/home/app/volume_data
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
 
   training:
     build:
@@ -85,6 +92,13 @@ services:
       - RECIPIENT_EMAIL=ruizguillaume05@gmail.com
     volumes:
       - main_volume:/home/app/volume_data
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
 
   mlflowui:
     build:

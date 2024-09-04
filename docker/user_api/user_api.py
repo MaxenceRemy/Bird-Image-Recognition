@@ -21,6 +21,7 @@ load_dotenv()
 volume_path = 'volume_data'
 
 dataset_clean_path = os.path.join(volume_path, 'dataset_clean')
+dataset_raw_path = os.path.join(volume_path, 'dataset_raw')
 log_folder = os.path.join(volume_path, "logs")
 os.makedirs(log_folder, exist_ok = True)
 logging.basicConfig(filename=os.path.join(log_folder, "user_api.log"), level=logging.INFO, 
@@ -149,7 +150,7 @@ async def predict(
 # Route pour obtenir la liste des espèces
 @app.get("/get_species")
 async def get_species(api_key: str = Depends(verify_api_key), username: str = Depends(verify_token)):
-    df = pd.read_csv(os.path.join(dataset_clean_path, 'birds_list.csv'))
+    df = pd.read_csv(os.path.join(dataset_raw_path, 'birds_list.csv'))
     species_list = df["English"].tolist()
     return {"species": species_list}
 

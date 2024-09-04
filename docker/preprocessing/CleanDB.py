@@ -3,7 +3,7 @@ import random
 import shutil
 import time
 from tqdm import tqdm
-from DatasetCorrection import DatasetCorrection
+# from DatasetCorrection import DatasetCorrection
 from UnderSampling import UnderSamplerImages
 from SizeManager import SizeManager
 
@@ -165,7 +165,7 @@ class CleanDB:
             self.extract_percent_from_one_class(classe_index, all_classes, set_path, percent)
 
     def start_clean(self):
-        self.dataset_correction()
+        # self.dataset_correction()
         sizeManager = SizeManager(db_to_clean_path=self.db_to_clean_path)
         sizeManager.manage()
         self.sets_fusion()
@@ -173,12 +173,12 @@ class CleanDB:
         self.split_train_test_valid()
         self.check_percents()
 
-    def dataset_correction(self):
-        """
-        Correction des incoherences des données, et création du fichier CSV de modèle d'espèces
-        """
-        datasetCorrection = DatasetCorrection(db_to_clean=self.db_to_clean_path, test_mode=self.test_mode)
-        datasetCorrection.full_correction()
+    # def dataset_correction(self):
+    #     """
+    #     Correction des incoherences des données, et création du fichier CSV de modèle d'espèces
+    #     """
+    #     datasetCorrection = DatasetCorrection(db_to_clean=self.db_to_clean_path, test_mode=self.test_mode)
+    #     datasetCorrection.full_correction()
 
     def under_sample(self):
         underSampler = UnderSamplerImages(self.db_to_clean_path, treshold=self.treshold)

@@ -3,3 +3,4 @@ mlflow
 schedule
 tensorflow
 scikit-learn
+gpustat

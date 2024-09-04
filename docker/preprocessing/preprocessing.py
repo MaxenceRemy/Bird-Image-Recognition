@@ -22,6 +22,7 @@ import requests
 import json
 import schedule
 from CleanDB import CleanDB
+from DatasetCorrection import DatasetCorrection
 
 
 volume_path = 'volume_data'
@@ -80,6 +81,8 @@ def start_cleaning(base_dict, updated_dict):
     logging.info(f"Copie des fichiers terminée !")
     os.remove(os.path.join(dataset_clean_path, 'dataset_version.json'))
     os.remove(os.path.join(dataset_clean_path, 'classes_tracking.json'))
+    os.remove(os.path.join(dataset_clean_path, 'birds.csv'))
+    os.remove(os.path.join(dataset_clean_path, 'birds_list.csv'))
     new_classes_to_track = get_new_classes(base_dict)
     if new_classes_to_track:
         for classe in new_classes_to_track:
@@ -121,13 +124,23 @@ def auto_update_dataset(dataset_name, destination, base_dict = False, updated_di
                     print(f"La version du dataset nécéssite une mise à jour.")
 
     # On télécharge le fichier
-    kaggle_api.dataset_download_files(dataset_name, path = destination, unzip = True)
+    temp_destination = os.path.join(destination, 'temp')
+    kaggle_api.dataset_download_files(dataset_name, path = temp_destination, unzip = True)
     with open(dataset_version_path, 'w') as file:
         json.dump(dataset_info, file, indent=4)
 
     # On supprime les fichiers temporaires
     # os.remove(os.path.join(destination, "birds.csv"))
-    os.remove(os.path.join(destination, "EfficientNetB0-525-(224 X 224)- 98.97.h5"))
+    os.remove(os.path.join(temp_destination, "EfficientNetB0-525-(224 X 224)- 98.97.h5"))
+
+    """
+    Correction des incoherences des données, et création du fichier CSV de modèle d'espèces
+    """
+    datasetCorrection = DatasetCorrection(db_to_clean = temp_destination, test_mode = False)
+    datasetCorrection.full_correction()
+
+    shutil.copytree(temp_destination, destination, dirs_exist_ok = True)
+    shutil.rmtree(temp_destination)
 
     # on créer ou charge le fichier de tracking du dataset
     if not os.path.exists(classes_tracking_path):

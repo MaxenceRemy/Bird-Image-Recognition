@@ -2,6 +2,9 @@ FROM ubuntu:20.04
 ADD requirements.txt .
 RUN apt-get update && apt-get install python3-pip -y && pip3 install -r requirements.txt
 WORKDIR /home/app/
-ADD streamlit_docker.py .
+COPY streamlit_docker.py .
+COPY Architecture.svg .
+COPY oiseau_cover.jpg .
+COPY logo.jpeg .
 EXPOSE 5300
 CMD ["streamlit", "run", "streamlit_docker.py"]

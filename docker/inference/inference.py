@@ -26,6 +26,7 @@ logging.basicConfig(filename=os.path.join(log_folder, "inference.log"), level=lo
                     datefmt='%d/%m/%Y %I:%M:%S %p')
 
 mlruns_path = os.path.join(volume_path, 'mlruns')
+too_long_inference = 0
     
 
 class predictClass:
@@ -72,13 +73,19 @@ class predictClass:
             
             prediction = self.model.predict(img_ready)
             
-            highest_score_index = int(np.argmax(prediction))
-            meilleure_classe = self.class_names[str(highest_score_index)]
-            highest_score = float(np.max(prediction))
+            # highest_score_index = int(np.argmax(prediction))
+            # meilleure_classe = self.class_names[str(highest_score_index)]
+            # highest_score = float(np.max(prediction))
+
+            meilleurs_scores = np.flip(np.sort(prediction[0])[-3:])
+            meilleures_classes_index = np.flip(np.argsort(prediction[0])[-3:])
+            meilleures_classes = []
+            for index in meilleures_classes_index:
+                meilleures_classes.append(self.class_names[str(index)])
     
             
-            logging.info(f"Prédiction effectuée : classe = {meilleure_classe}, score = {highest_score}")
-            return meilleure_classe, highest_score
+            logging.info(f"Prédiction effectuée : classe = {meilleures_classes}, score = {meilleurs_scores}")
+            return meilleures_classes, meilleurs_scores
         except Exception as e:
             logging.error(f"Erreur lors de la prédiction : {str(e)}")
             raise
@@ -108,12 +115,22 @@ def read_root():
 @app.get("/predict")
 async def predict(file_name: str):
     try:
+        global too_long_inference 
+        start_time = time.time()
         temp_folder = os.path.join(volume_path, 'temp_images')
         image_path = os.path.join(temp_folder, file_name)
         logging.info("Début de la prédiction")
-        meilleure_classe, highest_score = classifier.predict(image_path)
-        logging.info(f"Prédiction terminée: {meilleure_classe}, score: {highest_score}")
-        return {"prediction": meilleure_classe, "score": highest_score, "filename": file_name}
+        meilleures_classes, meilleurs_scores = classifier.predict(image_path)
+        logging.info(f"Prédiction terminée: {meilleures_classes}, score: {meilleurs_scores}")
+        time.sleep(1)
+        end_time = time.time()
+        if ((end_time - start_time) > 1):
+            too_long_inference += 1
+        if too_long_inference > 3:
+            too_long_inference = 0
+            return {"predictions": meilleures_classes, "scores": meilleurs_scores.tolist(), "filename": file_name, 'too_long_inference': "Yes"}
+        else:
+            return {"predictions": meilleures_classes, "scores": meilleurs_scores.tolist(), "filename": file_name, 'too_long_inference': "No"}
     
     except Exception as e:
         logging.error(f'Failed to open the image and/or do the inference: {e}')
