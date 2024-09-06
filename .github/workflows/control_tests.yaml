@@ -28,6 +28,21 @@ jobs:
         echo '{"username":"${{ secrets.KAGGLE_USERNAME }}","key":"${{ secrets.KAGGLE_KEY }}"}' > kaggle.json
         chmod 400 kaggle.json
 
+
+
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Build and push
+      uses: docker/build-push-action@v4
+      with:
+        push: true
+        platforms: linux/amd64,linux/arm64
+
+
+
+
     - name: Run unit tests
       run: |
         python -m unittest discover -v -s tests/unit
