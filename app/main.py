@@ -202,7 +202,7 @@ async def add_image(
 @app.get("/get_species")
 async def get_species(api_key: str = Depends(verify_api_key), username: str = Depends(verify_token)):
     df = pd.read_csv("./data/birds_list.csv")
-    species_list = df["English"].tolist()
+    species_list = sorted(df["English"].tolist())
     return {"species": species_list}
 
 

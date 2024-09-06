@@ -151,7 +151,7 @@ async def predict(
 @app.get("/get_species")
 async def get_species(api_key: str = Depends(verify_api_key), username: str = Depends(verify_token)):
     df = pd.read_csv(os.path.join(dataset_raw_path, 'birds_list.csv'))
-    species_list = df["English"].tolist()
+    species_list = sorted(df["English"].tolist())
     return {"species": species_list}
 
 # Route pour télécharger une image
