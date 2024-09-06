@@ -14,8 +14,8 @@ import streamlit.components.v1 as components
 st.set_page_config(page_title="Projet MLOps - Reconnaissance d'Oiseaux", layout="wide")
 
 # URLs des APIs
-USER_API_URL = os.getenv("USER_API_URL", "http://localhost:5000")
-ADMIN_API_URL = os.getenv("ADMIN_API_URL", "http://localhost:5100")
+USER_API_URL = os.getenv("USER_API_URL", "http://user_api:5000")
+ADMIN_API_URL = os.getenv("ADMIN_API_URL", "http://admin_api:5100")
 
 if 'specie' not in st.session_state:
     st.session_state.specie = 0
