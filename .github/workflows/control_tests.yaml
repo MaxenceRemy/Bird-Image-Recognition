@@ -12,11 +12,11 @@ jobs:
 
     steps:
     - uses: actions/cache@v3
-      with:
-        path: /tmp/.buildx-cache
-        key: ${{ runner.os }}-buildx-${{ github.sha }}
-        restore-keys: |
-          ${{ runner.os }}-buildx-
+      # with:
+      #   path: /tmp/.buildx-cache
+      #   key: ${{ runner.os }}-buildx-${{ github.sha }}
+      #   restore-keys: |
+      #     ${{ runner.os }}-buildx-
 
     - name: Set up Python
       uses: actions/setup-python@v4
