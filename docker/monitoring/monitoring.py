@@ -65,6 +65,10 @@ class SystemMonitorThread(threading.Thread):
             (metrics["swap_usage"] >= 50, "L'usage du SWAP dépasse les 50%."),
             (metrics["process_count"] >= 1000, "Le nombre de processus en cours est supérieur à 1000."),
         ]
+        i = 0
+        while f"gpu_{i}_usage" in metrics:
+            conditions.append((metrics[f"gpu_{i}_usage"] >= 99, f"L'usage du GPU {i} dépasse les 99%."))
+            i += 1
 
         for condition, message in conditions:
             if condition:
