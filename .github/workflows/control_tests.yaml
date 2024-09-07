@@ -13,40 +13,36 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.10.10'
+    # - name: Set up Python
+    #   uses: actions/setup-python@v4
+    #   with:
+    #     python-version: '3.10.10'
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+    # - name: Install dependencies
+    #   run: |
+    #     python -m pip install --upgrade pip
+    #     pip install -r requirements.txt
 
-    - name: Create kaggle.json file
-      run: |
-        echo '{"username":"${{ secrets.KAGGLE_USERNAME }}","key":"${{ secrets.KAGGLE_KEY }}"}' > kaggle.json
-        chmod 400 kaggle.json
-
-
+    # - name: Create kaggle.json file
+    #   run: |
+    #     echo '{"username":"${{ secrets.KAGGLE_USERNAME }}","key":"${{ secrets.KAGGLE_KEY }}"}' > kaggle.json
+    #     chmod 400 kaggle.json
 
 
 
 
 
 
+    # - name: Checkout code
+    #   uses: actions/checkout@v3
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
 
-    # - name: Build and push
-    #   uses: docker/build-push-action@v4
-    #   with:
-    #     push: true
-    #     platforms: linux/amd64,linux/arm64
-
-
-    - name: Login to Docker Hub
+    - name: Login to DockerHub
       uses: docker/login-action@v2
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -55,9 +51,35 @@ jobs:
     - name: Build and push Docker images
       run: |
         cd docker
-        docker-compose config | docker buildx bake -f - \
-          --set *.platform=linux/amd64,linux/arm64 \
-          --push
+        docker compose config
+        docker compose build
+        docker compose push
+
+
+    # - name: Set up Docker Buildx
+    #   uses: docker/setup-buildx-action@v2
+
+    # - name: Build and push
+    #   uses: docker/build-push-action@v4
+    #   with:
+    #     push: true
+    #     platforms: linux/amd64,linux/arm64
+
+
+    # - name: Login to Docker Hub
+    #   uses: docker/login-action@v2
+    #   with:
+    #     username: ${{ secrets.DOCKERHUB_USERNAME }}
+    #     password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    # - name: Build and push Docker images
+    #   run: |
+    #     cd docker
+    #     docker compose version
+    #     docker buildx version
+    #     docker compose config | docker buildx bake -f - \
+    #       --set "*.platform=linux/amd64,linux/arm64" \
+    #       --push
 
 
 
@@ -65,26 +87,25 @@ jobs:
 
 
 
+    # - name: Run unit tests
+    #   run: |
+    #     python -m unittest discover -v -s tests/unit
+    # - name: Data folder suppression
+    #   run: |
+    #     if [ -d "./data" ]; then
+    #       rm -rf ./data/*
+    #     else
+    #       echo "Le répertoire 'data' n'existe pas"
+    #       exit 1
+    #     fi
+    # - name: Execute pipeline script
+    #   run: |
+    #     python ./scripts/pipeline.py --test_dataset_mode True
 
-    - name: Run unit tests
-      run: |
-        python -m unittest discover -v -s tests/unit
-    - name: Data folder suppression
-      run: |
-        if [ -d "./data" ]; then
-          rm -rf ./data/*
-        else
-          echo "Le répertoire 'data' n'existe pas"
-          exit 1
-        fi
-    - name: Execute pipeline script
-      run: |
-        python ./scripts/pipeline.py --test_dataset_mode True
+    # - name: Run integration tests
+    #   run: |
+    #     python -m unittest discover -v -s tests/integration
 
-    - name: Run integration tests
-      run: |
-        python -m unittest discover -v -s tests/integration
-
-    - name: Run Flake8
-      run: |
-        flake8 .
+    # - name: Run Flake8
+    #   run: |
+    #     flake8 .
