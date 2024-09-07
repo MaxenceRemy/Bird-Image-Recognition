@@ -1,55 +1,56 @@
 services:
-  user_api:
-    build:
-      context: ./user_api
-      dockerfile: Dockerfile
-    image: user_api:latest
-    container_name: user_api
-    environment:
-      - API_KEY=abcd1234
-      - JWT_SECRET_KEY=password
-      - USER_PASSWORD=titeuf
-    ports:
-      - target: 5000
-        published: 5000
-        protocol: tcp
-        mode: host
-    volumes:
-      - main_volume:/home/app/volume_data
 
-  admin_api:
-    build:
-      context: ./admin_api
-      dockerfile: Dockerfile
-    image: admin_api:latest
-    container_name: admin_api
-    environment:
-      - API_KEY=abcd1234
-      - JWT_SECRET_KEY=password
-      - ADMIN_PASSWORD=toto
-    ports:
-      - target: 5100
-        published: 5100
-        protocol: tcp
-        mode: host
-    volumes:
-      - main_volume:/home/app/volume_data
+  # user_api:
+  #   build:
+  #     context: ./user_api
+  #     dockerfile: Dockerfile
+  #   image: user_api:latest
+  #   container_name: user_api
+  #   environment:
+  #     - API_KEY=abcd1234
+  #     - JWT_SECRET_KEY=password
+  #     - USER_PASSWORD=titeuf
+  #   ports:
+  #     - target: 5000
+  #       published: 5000
+  #       protocol: tcp
+  #       mode: host
+  #   volumes:
+  #     - main_volume:/home/app/volume_data
 
-  inference:
-    build:
-      context: ./inference
-      dockerfile: Dockerfile
-    image: inference:latest
-    container_name: inference
-    volumes:
-      - main_volume:/home/app/volume_data
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+  # admin_api:
+  #   build:
+  #     context: ./admin_api
+  #     dockerfile: Dockerfile
+  #   image: admin_api:latest
+  #   container_name: admin_api
+  #   environment:
+  #     - API_KEY=abcd1234
+  #     - JWT_SECRET_KEY=password
+  #     - ADMIN_PASSWORD=toto
+  #   ports:
+  #     - target: 5100
+  #       published: 5100
+  #       protocol: tcp
+  #       mode: host
+  #   volumes:
+  #     - main_volume:/home/app/volume_data
+
+  # inference:
+  #   build:
+  #     context: ./inference
+  #     dockerfile: Dockerfile
+  #   image: inference:latest
+  #   container_name: inference
+  #   volumes:
+  #     - main_volume:/home/app/volume_data
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: 1
+  #             capabilities: [gpu]
 
   training:
     build:
@@ -67,68 +68,68 @@ services:
               count: 1
               capabilities: [gpu]
 
-  preprocessing:
-    build:
-      context: ./preprocessing
-      dockerfile: Dockerfile
-    image: preprocessing:latest
-    container_name: preprocessing
-    environment:
-      - GMAIL_PASSWORD=seet pbgx mmme uyzz
-      - KAGGLE_KEY=1621a0994590fcb62ad5542ffcc6aec3
-      - KAGGLE_USERNAME=maxenceremyharoche
-    volumes:
-      - main_volume:/home/app/volume_data
+  # preprocessing:
+  #   build:
+  #     context: ./preprocessing
+  #     dockerfile: Dockerfile
+  #   image: preprocessing:latest
+  #   container_name: preprocessing
+  #   environment:
+  #     - GMAIL_PASSWORD=seet pbgx mmme uyzz
+  #     - KAGGLE_KEY=1621a0994590fcb62ad5542ffcc6aec3
+  #     - KAGGLE_USERNAME=maxenceremyharoche
+  #   volumes:
+  #     - main_volume:/home/app/volume_data
 
-  monitoring:
-    build:
-      context: ./monitoring
-      dockerfile: Dockerfile
-    image: monitoring:latest
-    container_name: monitoring
-    environment:
-      - ALERT_EMAIL=yoniedery26@gmail.com
-      - EMAIL_PASSWORD=qzsh hkpz ytaa oevw
-      - RECIPIENT_EMAIL=ruizguillaume05@gmail.com
-    volumes:
-      - main_volume:/home/app/volume_data
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+  # monitoring:
+  #   build:
+  #     context: ./monitoring
+  #     dockerfile: Dockerfile
+  #   image: monitoring:latest
+  #   container_name: monitoring
+  #   environment:
+  #     - ALERT_EMAIL=yoniedery26@gmail.com
+  #     - EMAIL_PASSWORD=qzsh hkpz ytaa oevw
+  #     - RECIPIENT_EMAIL=ruizguillaume05@gmail.com
+  #   volumes:
+  #     - main_volume:/home/app/volume_data
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: 1
+  #             capabilities: [gpu]
 
-  mlflowui:
-    build:
-      context: ./mlflowui
-      dockerfile: Dockerfile
-    image: mlflowui:latest
-    container_name: mlflowui
-    ports:
-      - target: 5200
-        published: 5200
-        protocol: tcp
-        mode: host
-    volumes:
-      - main_volume:/home/app/volume_data
+  # mlflowui:
+  #   build:
+  #     context: ./mlflowui
+  #     dockerfile: Dockerfile
+  #   image: mlflowui:latest
+  #   container_name: mlflowui
+  #   ports:
+  #     - target: 5200
+  #       published: 5200
+  #       protocol: tcp
+  #       mode: host
+  #   volumes:
+  #     - main_volume:/home/app/volume_data
 
-  streamlit:
-    build:
-      context: ./streamlit
-      dockerfile: Dockerfile
-    image: streamlit:latest
-    container_name: streamlit
-    environment:
-      - STREAMLIT_SERVER_PORT=5300
-    ports:
-      - target: 5300
-        published: 5300
-        protocol: tcp
-        mode: host
-    volumes:
-      - main_volume:/home/app/volume_data
+  # streamlit:
+  #   build:
+  #     context: ./streamlit
+  #     dockerfile: Dockerfile
+  #   image: streamlit:latest
+  #   container_name: streamlit
+  #   environment:
+  #     - STREAMLIT_SERVER_PORT=5300
+  #   ports:
+  #     - target: 5300
+  #       published: 5300
+  #       protocol: tcp
+  #       mode: host
+  #   volumes:
+  #     - main_volume:/home/app/volume_data
 
 volumes:
   main_volume:
