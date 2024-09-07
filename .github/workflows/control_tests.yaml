@@ -28,62 +28,24 @@ jobs:
         echo '{"username":"${{ secrets.KAGGLE_USERNAME }}","key":"${{ secrets.KAGGLE_KEY }}"}' > kaggle.json
         chmod 400 kaggle.json
 
-    # - name: Set up MLflow
-    #   run: |
-    #     mlflow server --backend-store-uri sqlite:///mlflow.db --default-artifact-root ./mlruns &
 
 
-    # - name: Log in to Docker Hub
-    #   uses: docker/login-action@v2
-    #   with:
-    #     username: ${{ secrets.DOCKER_USERNAME }}
-    #     password: ${{ secrets.DOCKER_PASSWORD }}
 
-    - name: Install Docker Compose
-      run: |
-        sudo curl -L "https://github.com/docker/compose/releases/download/$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep tag_name | cut -d '"' -f 4)/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-        sudo chmod +x /usr/local/bin/docker-compose
-        docker-compose --version
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
 
-    # - name: Build Docker images
-    #   run: docker-compose -f ./docker/docker-compose.yml build
-
-    - name: Run docker-compose
-      uses: hoverkraft-tech/compose-action@v2.0.1
+    - name: Build and push
+      uses: docker/build-push-action@v4
       with:
-        compose-file: "./docker/docker-compose.yml"
-
-    - name: Execute tests in the running services
-      run: |
-        docker-compose exec test-app pytest
+        push: true
+        platforms: linux/amd64,linux/arm64
 
 
 
-    # - name: Build and start services
-    #   run: docker-compose up -f docker/docker-compose.yml -d
-    # - name: Run tests
-    #   run: |
-    #     # Ajoutez ici vos commandes de test
-    #     # Par exemple : curl http://localhost:8080
-    # - name: Stop services
-    #   run: docker-compose down
-
-
-    # - name: Set up Docker
-    #   uses: docker/setup-buildx-action@v2
-
-    # - name: Run docker compose
-    #   run: |
-    #     docker-compose -f docker/docker-compose.yml up
-
-    - name: Run Flake8
-      run: |
-        flake8 .
 
     - name: Run unit tests
       run: |
         python -m unittest discover -v -s tests/unit
-
     - name: Data folder suppression
       run: |
         if [ -d "./data" ]; then
@@ -92,21 +54,14 @@ jobs:
           echo "Le répertoire 'data' n'existe pas"
           exit 1
         fi
-
     - name: Execute pipeline script
       run: |
         python ./scripts/pipeline.py --test_dataset_mode True
-    #    python ./scripts/pipeline.py
 
     - name: Run integration tests
       run: |
         python -m unittest discover -v -s tests/integration
-            
-    # - name: Upload test results
-    #   uses: actions/upload-artifact@v2
-    #   if: always()
-    #   with:
-    #     name: test-results
-    #     path: |
-    #       ./logs/*.log
-    #       ./mlruns
+
+    - name: Run Flake8
+      run: |
+        flake8 .
