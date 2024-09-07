@@ -55,7 +55,7 @@ jobs:
     - name: Build and push Docker images
       run: |
         cd docker
-        docker-compose config | docker buildx ./docker bake -f - \
+        docker-compose config | docker buildx bake -f - \
           --set *.platform=linux/amd64,linux/arm64 \
           --push
 
