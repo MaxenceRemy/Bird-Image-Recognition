@@ -64,7 +64,7 @@ if page == "Présentation du Projet":
         st.warning("Image de couverture non trouvée. Veuillez vous assurer que 'oiseau_cover.jpg' est présent dans le répertoire du script.")
 
     # Création des onglets
-    tabs = st.tabs(["Introduction", "Contexte", "Solution", "Schémas", "Participation des Utilisateurs"])
+    tabs = st.tabs(["Introduction", "Contexte", "Solution", "Architecture", "Participation des Utilisateurs"])
 
     with tabs[0]:
         st.header("Introduction et Présentation")
