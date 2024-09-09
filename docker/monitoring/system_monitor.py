@@ -17,8 +17,12 @@ class SystemMonitor:
         log_dir = os.path.join(volume_path, 'logs/system_monitor')
         os.makedirs(log_dir, exist_ok=True)
 
-        #Récupération du nombre de gpus
-        gpu_counts = len(gpustat.GPUStatCollection.new_query())
+        try:
+            #Récupération du nombre de gpus
+            self.gpu_counts = len(gpustat.GPUStatCollection.new_query())
+        except Exception as e:
+            self.logger.error(f"Aucun GPU ne semble être présent, désactivation du suivi GPU")
+            self.gpu_counts = 0
 
         self.csv_filename = os.path.join(log_dir, f'system_metrics_{datetime.now().strftime("%d%m%Y_%H%M")}.csv')
         with open(self.csv_filename, "w", newline="") as csvfile:
@@ -34,7 +38,7 @@ class SystemMonitor:
                     "Swap Usage",
                     "Process Count",
                 ]
-            for i in range(gpu_counts):
+            for i in range(self.gpu_counts):
                 columns.append(f"GPU_{i} Usage")
 
             writer.writerow(columns)
@@ -46,10 +50,11 @@ class SystemMonitor:
         net_io = psutil.net_io_counters()
         swap_usage = psutil.swap_memory().percent
         process_count = len(psutil.pids())
-        gpus_usage = {}
-        gpus_stats = gpustat.GPUStatCollection.new_query()
-        for i, gpu in enumerate(gpus_stats.gpus):
-            gpus_usage[f"gpu_{i}_usage"] = gpu.utilization
+        if self.gpu_counts > 0:
+            gpus_usage = {}
+            gpus_stats = gpustat.GPUStatCollection.new_query()
+            for i, gpu in enumerate(gpus_stats.gpus):
+                gpus_usage[f"gpu_{i}_usage"] = gpu.utilization
 
         metrics = {
             "cpu_usage": cpu_usage,
@@ -61,7 +66,8 @@ class SystemMonitor:
             "process_count": process_count,
         }
 
-        metrics.update(gpus_usage)
+        if self.gpu_counts > 0:
+            metrics.update(gpus_usage)
 
         return metrics
 
