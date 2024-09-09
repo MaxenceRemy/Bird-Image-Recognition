@@ -5,8 +5,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from_email = os.getenv("ALERT_EMAIL")
-password = os.getenv("EMAIL_PASSWORD")
+from_email = os.getenv("SENDER_EMAIL")
+password = os.getenv("SENDER_EMAIL_PASSWORD")
 to_email = os.getenv("RECIPIENT_EMAIL")
 smtp_server = "smtp.gmail.com"
 smtp_port = 465  # Port pour SSL
