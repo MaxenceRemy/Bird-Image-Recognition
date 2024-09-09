@@ -146,8 +146,8 @@ Cela permet à l'un d'attendre que l'autre est fini pour se lancer et évite des
 **Version docker (conseillé) :**
 
 1. Installer Docker Desktop et le lancer
-2. Télécharger dans le même dossier docker-compose.yml (si vous avez un GPU Nvidia, téléchargez docker-compose-nvidia.yml pour accéléler les conteneurs)
-3. Compléter le fichier .env situé dans le dossier Docker avec vos identifiants Gmail (il ne faut pas utiliser le mot de passe du compte, mais générer un "App password" via l'interface de Gestion du compte Google)
+2. Cloner le repository et aller dans le dossier Docker
+3. Compléter le fichier .env situé dans le dossier Docker (pas celui à la racine) avec vos identifiants Gmail (il ne faut pas utiliser le mot de passe du compte, mais générer un "App password" via l'interface de Gestion du compte Google)
 4. Ajouter ensuite dans le même .env vos identifiants Kaggle (connectez-vous à votre compte kaggle.com puis "Settings > API > Create New Token")
 
 **Version sans docker :**
@@ -161,8 +161,9 @@ Cela permet à l'un d'attendre que l'autre est fini pour se lancer et évite des
 
 **Version docker (conseillé) :**
 
-1. Entrer dans le répertoire Docker du projet avec le terminal
-2. Entrer la commande pour lancer les containers : `docker compose up`
+1. Entrez dans le répertoire Docker du projet avec le terminal
+2. Si vous avez une carte graphique Nvidia : `docker-compose -f docker-compose-nvidia.yml up`
+3. Si vous n'avez pas de carte graphique Nvidia ou vous n'êtes pas sur : `docker-compose -f docker-compose.yml up`
 
 **Version sans docker :**
 
