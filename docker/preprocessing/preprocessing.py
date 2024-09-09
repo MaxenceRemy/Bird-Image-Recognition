@@ -19,6 +19,7 @@ classes_tracking_path = os.path.join(dataset_raw_path, "classes_tracking.json")
 state_folder = os.path.join(volume_path, "containers_state")
 state_path = os.path.join(state_folder, "preprocessing_state.txt")
 training_state_path = os.path.join(state_folder, "training_state.txt")
+monitoring_state_path = os.path.join(state_folder, "monitoring_state.txt")
 log_folder = os.path.join(volume_path, "logs")
 
 # On créer les dossiers si nécessaire
@@ -41,7 +42,6 @@ logging.basicConfig(
 
 # On instancie la classe qui permet d'envoyer des alertes par email
 alert_system = AlertSystem()
-
 
 def save_json(filepath, dict):
     """
@@ -76,6 +76,14 @@ def start_cleaning(new_classes_to_track=[]):
         state = file.read()
     while state == "1":
         with open(training_state_path, "r") as file:
+            state = file.read()
+        time.sleep(5)
+
+    # La fonction reste en attente tant que le container de monitoring est actif
+    with open(monitoring_state_path, "r") as file:
+        state = file.read()
+    while state == "1":
+        with open(monitoring_state_path, "r") as file:
             state = file.read()
         time.sleep(5)
 
@@ -171,13 +179,14 @@ def auto_update_dataset(dataset_name, destination, first_launch=False):
     shutil.copytree(temp_destination, destination, dirs_exist_ok=True)
     shutil.rmtree(temp_destination)
     logging.info("Mise à jour du dataset terminée !")
-    alert_system.send_alert(
-        subject="Un nouveau dataset vient d'être téléchargé !",
-        message="""Un nouveau dataset vient d'être téléchargé.
-                            S'il contient suffisament de nouvelles images ou des nouvelles
-                            classes, le preprocessing se déclenchera automatiquement
-                            et un autre mail sera envoyé.""",
-    )
+    if first_launch == False:
+        alert_system.send_alert(
+            subject="Un nouveau dataset vient d'être téléchargé !",
+            message="""Un nouveau dataset vient d'être téléchargé.
+                                S'il contient suffisament de nouvelles images ou des nouvelles
+                                classes, le preprocessing se déclenchera automatiquement
+                                et un autre mail sera envoyé.""",
+        )
 
 
 def refresh_images_count(base_dict, updated_dict, dict_class_key, dict_count_key):
@@ -228,7 +237,12 @@ try:
         with open(state_path, "w") as file:
             file.write("0")
 
-        logging.info("Toutes les opérations ont été effecutées avec succès !")
+        logging.info("Le dataset de base a bien été téléchargé et le preprocessing est terminé !")
+        alert_system.send_alert(
+            subject="Le dataset de base est prêt !",
+            message="""Le dataset de base a été téléchargé et le preprocessing a été effecuté,
+            vous pouvez donc maintenant utiliser l'application dans son entiereté !""",
+        )
 except Exception as e:
     logging.error(f"Erreur lors du premier lancement : {e}")
     alert_system.send_alert(subject="Erreur lors du preprocessing", message=f"Erreur lors du premier lancement : {e}")
@@ -246,7 +260,7 @@ except Exception as e:
     alert_system.send_alert(subject="Erreur lors du preprocessing", message=f"Erreur lors de l'ouverture du fichier de tracking : {e}")
 
 
-# Tous les jours à 12h, on vérifie la présence d'un nouveau dataset
+# Tous les jours à 02h, on vérifie la présence d'un nouveau dataset
 schedule.every().day.at("02:00").do(auto_update_dataset, "gpiosenka/100-bird-species", dataset_raw_path)
 
 # ----------------------------------------------------------------------------------------- #

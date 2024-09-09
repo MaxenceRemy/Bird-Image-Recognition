@@ -8,13 +8,18 @@ from alert_system import AlertSystem
 from system_monitor import SystemMonitor
 
 
-# region Système de logging
+# region Configuration
+
+
 volume_path = 'volume_data'
 log_folder = os.path.join(volume_path, "logs")
 os.makedirs(log_folder, exist_ok=True)
 logging.basicConfig(filename=os.path.join(log_folder, "monitoring.log"), level=logging.INFO,
                     format='%(asctime)s %(levelname)s %(message)s',
                     datefmt='%d/%m/%Y %I:%M:%S %p')
+
+alert_system = AlertSystem()
+
 # endregion
 
 
@@ -24,7 +29,6 @@ class SystemMonitorThread(threading.Thread):
         self.stop_event = threading.Event()
         self.monitor = SystemMonitor()
         self.metrics_queue = queue.Queue()
-        self.alert_system = AlertSystem()
         self.last_email = 0
 
     def run(self):
@@ -83,11 +87,15 @@ class SystemMonitorThread(threading.Thread):
         if current_time - self.last_email >= 3600:
             logging.error("Anomalie de performances, email de rapport envoyé.")
             subject = "Anomalie de permances"
-            self.alert_system.send_alert(subject=subject, message=message)
+            alert_system.send_alert(subject=subject, message=message)
             self.last_email = current_time
 
 
 if __name__ == "__main__":
-
-    monitor_thread = SystemMonitorThread()
-    monitor_thread.run()
+    try:
+        monitor_thread = SystemMonitorThread()
+        monitor_thread.run()
+    except Exception as e:
+        logging.error(f"Erreur lors de l'exécution du suivi des métriques système: {e}")
+        alert_system.send_alert(subject="Erreur lors du suivi des métriques système",
+                                message=f"Erreur lors de l'exécution du suivi des métriques système: {e}")

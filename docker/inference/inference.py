@@ -123,8 +123,6 @@ def load_classifier(run_id):
     model_path = os.path.join(
         volume_path, f"mlruns/157975935045122495/{run_id}/artifacts/model/"
     )
-    while not os.path.exists(model_path):
-        time.sleep(1)
     # On instancie de classifier
     classifier = predictClass(model_path=model_path)
     # On fais la prédiction d'une image pour charger le modèle
@@ -170,7 +168,6 @@ async def predict(file_name: str):
             f"""Prédiction effectuée : id modèle = {run_id}, image_name = {file_name},
             classe = {meilleures_classes}, score = {meilleurs_scores}"""
         )
-        time.sleep(2)
         # On calcule temps qui a été nécessaire
         end_time = time.time()
         total_time = end_time - start_time

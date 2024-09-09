@@ -1,0 +1,15 @@
+artifact_uri: file:///home/app/volume_data/mlruns/157975935045122495/7fd90b2f1d864d0290dea20703714cde/artifacts
+end_time: 1725905755023
+entry_point_name: ''
+experiment_id: '157975935045122495'
+lifecycle_stage: active
+run_id: 7fd90b2f1d864d0290dea20703714cde
+run_name: enthused-loon-807
+run_uuid: 7fd90b2f1d864d0290dea20703714cde
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1725905652445
+status: 3
+tags: []
+user_id: root

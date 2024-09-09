@@ -20,14 +20,26 @@ test_set_path = os.path.join(dataset_path, "test")
 mlruns_path = os.path.join(volume_path, "mlruns")
 log_folder = os.path.join(volume_path, "logs")
 experiment_id = "157975935045122495"
+state_folder = os.path.join(volume_path, "containers_state")
+state_path = os.path.join(state_folder, "monitoring_state.txt")
+preprocessing_state_path = os.path.join(state_folder, "preprocessing_state.txt")
 
-# On créer le dossier si nécessaire
+# On créer les dossiers si nécessaire
+os.makedirs(log_folder, exist_ok=True)
+os.makedirs(state_folder, exist_ok=True)
 
 # On configure le logging pour les informations et les erreurs
-os.makedirs(log_folder, exist_ok=True)
 logging.basicConfig(filename=os.path.join(log_folder, "drift_monitor.log"), level=logging.INFO,
                     format='%(asctime)s %(levelname)s %(message)s',
                     datefmt='%d/%m/%Y %I:%M:%S %p')
+
+# On instancie la classe qui permet d'envoyer des alertes par email
+alert_system = AlertSystem()
+
+# On déclare l'état par défaut du container
+with open(state_path, "w") as file:
+    file.write("0")
+
 # endregion
 
 
@@ -42,7 +54,6 @@ class DriftMonitor:
         # Récupération du modèle et son emplacement
         with open(os.path.join(mlruns_path, "prod_model_id.txt"), "r") as file:
             self.run_id = file.read()
-        self.alert_system = AlertSystem()
         self.artifacts_path = os.path.join(mlruns_path, f"{experiment_id}/{self.run_id}/artifacts/")
         self.model_path = os.path.join(mlruns_path, f"{experiment_id}/{self.run_id}/artifacts/model/")
         self.model = load_model(os.path.join(self.model_path, "saved_model.h5"))
@@ -186,23 +197,38 @@ class DriftMonitor:
         Evolution des f1-score :
         {evolution_scores_list}
         """
-        self.alert_system.send_alert(subject=subject, message=message)
+        alert_system.send_alert(subject=subject, message=message)
 
 
 def main():
 
     try:
+        # La fonction reste en attente tant que le container de preprocessing est actif
+        with open(preprocessing_state_path, "r") as file:
+            state = file.read()
+        while state != "0":
+            with open(preprocessing_state_path, "r") as file:
+                state = file.read()
+            time.sleep(5)
+
+        # On indique que le container est actif
+        with open(state_path, "w") as file:
+            file.write("1")
         drift_monitor = DriftMonitor()
         df = drift_monitor.make_current_model_confusion_matrix()
         df = drift_monitor.compare_confusion_matrix(df)
         drift_monitor.send_report_email(df)
+        # On indique que le container est inactif
+        with open(state_path, "w") as file:
+            file.write("0")
     except Exception as e:
         logging.error(f"Erreur lors de l'exécution du suivi de dérive du modèle: {e}")
-        
+        alert_system.send_alert(subject="Erreur lors du drift monitoring",
+                                message=f"Erreur lors de l'exécution du suivi de dérive du modèle: {e}")
 
 
 if __name__ == "__main__":
-    schedule.every().day.at("02:00").do(main)
+    schedule.every().day.at("21:32").do(main)
     while True:
         schedule.run_pending()
         time.sleep(1)

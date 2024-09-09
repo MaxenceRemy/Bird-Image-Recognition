@@ -75,7 +75,6 @@ def load_authorized_users():
         return json.load(f)
 
 
-AUTHORIZED_USERS = load_authorized_users()
 
 # ----------------------------------------------------------------------------------------- #
 
@@ -118,7 +117,7 @@ def verify_token(token: str = Depends(OAuth2PasswordBearer(tokenUrl="/token"))):
         # On récupère le nom d'utilisateur dans le payload du token
         username: str = payload.get("sub")
         # On vérifie que l'utilisateur est bien autorisé
-        user = AUTHORIZED_USERS.get(username)
+        user = load_authorized_users().get(username)
         # On renvoie une erreur si l'utilisateur n'est pas valide
         if user is None or not user[0]:
             logging.warning("Le token ne contient pas de 'sub' valide")
@@ -168,7 +167,7 @@ def update_authorized_users(users):
 @app.post("/token", response_model=Token)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
     # On récupère l'utilisateur dans la liste des utilisateurs
-    user = AUTHORIZED_USERS.get(form_data.username)
+    user = load_authorized_users().get(form_data.username)
     # Si l'utilisateur n'existe pas ou que son mot de passe est faux, on renvoie une erreur
     if user is None or form_data.password != user[1]:
         logging.warning(

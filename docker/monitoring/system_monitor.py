@@ -6,6 +6,10 @@ from datetime import datetime
 import os
 import mlflow
 import gpustat
+from alert_system import AlertSystem
+
+# On instancie la classe qui permet d'envoyer des alertes par email
+alert_system = AlertSystem()
 
 
 class SystemMonitor:
@@ -13,31 +17,35 @@ class SystemMonitor:
         self.logger = logging.getLogger("system_monitor")
         self.logger.setLevel(logging.INFO)
 
-        volume_path = 'volume_data'
-        log_dir = os.path.join(volume_path, 'logs/system_monitor')
+        volume_path = "volume_data"
+        log_dir = os.path.join(volume_path, "logs/system_monitor")
         os.makedirs(log_dir, exist_ok=True)
 
         try:
-            #Récupération du nombre de gpus
+            # Récupération du nombre de gpus
             self.gpu_counts = len(gpustat.GPUStatCollection.new_query())
-        except Exception as e:
-            self.logger.error(f"Aucun GPU ne semble être présent, désactivation du suivi GPU")
+        except Exception:
+            self.logger.error(
+                "Aucun GPU ne semble être présent, désactivation du suivi GPU"
+            )
             self.gpu_counts = 0
 
-        self.csv_filename = os.path.join(log_dir, f'system_metrics_{datetime.now().strftime("%d%m%Y_%H%M")}.csv')
+        self.csv_filename = os.path.join(
+            log_dir, f'system_metrics_{datetime.now().strftime("%d%m%Y_%H%M")}.csv'
+        )
         with open(self.csv_filename, "w", newline="") as csvfile:
             writer = csv.writer(csvfile)
 
-            columns =  [
-                    "Timestamp",
-                    "CPU Usage",
-                    "Memory Usage",
-                    "Disk Usage",
-                    "Network Sent",
-                    "Network Recv",
-                    "Swap Usage",
-                    "Process Count",
-                ]
+            columns = [
+                "Timestamp",
+                "CPU Usage",
+                "Memory Usage",
+                "Disk Usage",
+                "Network Sent",
+                "Network Recv",
+                "Swap Usage",
+                "Process Count",
+            ]
             for i in range(self.gpu_counts):
                 columns.append(f"GPU_{i} Usage")
 
@@ -79,14 +87,18 @@ class SystemMonitor:
 
         with open(self.csv_filename, "a", newline="") as csvfile:
             writer = csv.writer(csvfile)
-            writer.writerow([timestamp.strftime("%d-%m-%Y %H:%M:%S")] + list(metrics.values()))
+            writer.writerow(
+                [timestamp.strftime("%d-%m-%Y %H:%M:%S")] + list(metrics.values())
+            )
 
         ts = int(timestamp.timestamp() * 1000)
         for key, value in metrics.items():
             try:
                 mlflow.log_metric(key, float(value), step=0, timestamp=ts)
             except Exception as e:
-                self.logger.error(f"Erreur lors de l'enregistrement de la métrique {key} dans MLflow: {str(e)}")
+                self.logger.error(
+                    f"Erreur lors de l'enregistrement de la métrique {key} dans MLflow: {str(e)}"
+                )
 
     def monitor(self, duration=60, interval=5):
         start_time = time.time()
@@ -96,5 +108,12 @@ class SystemMonitor:
 
 
 if __name__ == "__main__":
-    monitor = SystemMonitor()
-    monitor.monitor(duration=300, interval=5)
+    try:
+        monitor = SystemMonitor()
+        monitor.monitor(duration=300, interval=5)
+    except Exception as e:
+        logging.error(f"Erreur lors de l'exécution du suivi des métriques système: {e}")
+        alert_system.send_alert(
+            subject="Erreur lors du suivi des métriques système",
+            message=f"Erreur lors de l'exécution du suivi des métriques système: {e}",
+        )

@@ -7,9 +7,11 @@ services:
     image: user_api:latest
     container_name: user_api
     environment:
-      - API_KEY=abcd1234
-      - JWT_SECRET_KEY=password
-      - USER_PASSWORD=titeuf
+      - API_KEY=${API_KEY}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - ALERT_EMAIL=${ALERT_EMAIL}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+      - RECIPIENT_EMAIL=${RECIPIENT_EMAIL}
     ports:
       - target: 5000
         published: 5000
@@ -25,9 +27,11 @@ services:
     image: admin_api:latest
     container_name: admin_api
     environment:
-      - API_KEY=abcd1234
-      - JWT_SECRET_KEY=password
-      - ADMIN_PASSWORD=toto
+      - API_KEY=${API_KEY}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - ALERT_EMAIL=${ALERT_EMAIL}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+      - RECIPIENT_EMAIL=${RECIPIENT_EMAIL}
     ports:
       - target: 5100
         published: 5100
@@ -37,15 +41,12 @@ services:
       - main_volume:/home/app/volume_data
 
   inference:
-    build:
-      context: ./inference
-      dockerfile: Dockerfile
-    image: inference:latest
+    image: smartrmax/inference:latest
     container_name: inference
     environment:
-      - ALERT_EMAIL=raspberrypisender6@gmail.com
-      - EMAIL_PASSWORD=ehrx kcnp cshn uiwa
-      - RECIPIENT_EMAIL=maxenceremy1@gmail.com
+      - ALERT_EMAIL=${ALERT_EMAIL}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+      - RECIPIENT_EMAIL=${RECIPIENT_EMAIL}
     volumes:
       - main_volume:/home/app/volume_data
     deploy:
@@ -63,9 +64,9 @@ services:
     image: training:latest
     container_name: training
     environment:
-      - ALERT_EMAIL=raspberrypisender6@gmail.com
-      - EMAIL_PASSWORD=ehrx kcnp cshn uiwa
-      - RECIPIENT_EMAIL=maxenceremy1@gmail.com
+      - ALERT_EMAIL=${ALERT_EMAIL}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+      - RECIPIENT_EMAIL=${RECIPIENT_EMAIL}
     volumes:
       - main_volume:/home/app/volume_data
     deploy:
@@ -83,11 +84,11 @@ services:
     image: preprocessing:latest
     container_name: preprocessing
     environment:
-      - ALERT_EMAIL=raspberrypisender6@gmail.com
-      - EMAIL_PASSWORD=ehrx kcnp cshn uiwa
-      - RECIPIENT_EMAIL=maxenceremy1@gmail.com
-      - KAGGLE_KEY=1621a0994590fcb62ad5542ffcc6aec3
-      - KAGGLE_USERNAME=maxenceremyharoche
+      - ALERT_EMAIL=${ALERT_EMAIL}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+      - RECIPIENT_EMAIL=${RECIPIENT_EMAIL}
+      - KAGGLE_KEY=${KAGGLE_KEY}
+      - KAGGLE_USERNAME=${KAGGLE_USERNAME}
     volumes:
       - main_volume:/home/app/volume_data
 
@@ -98,9 +99,9 @@ services:
     image: monitoring:latest
     container_name: monitoring
     environment:
-      - ALERT_EMAIL=raspberrypisender6@gmail.com
-      - EMAIL_PASSWORD=ehrx kcnp cshn uiwa
-      - RECIPIENT_EMAIL=maxenceremy1@gmail.com
+      - ALERT_EMAIL=${ALERT_EMAIL}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+      - RECIPIENT_EMAIL=${RECIPIENT_EMAIL}
     volumes:
       - main_volume:/home/app/volume_data
     deploy:
@@ -133,6 +134,9 @@ services:
     container_name: streamlit
     environment:
       - STREAMLIT_SERVER_PORT=5300
+      - ALERT_EMAIL=${ALERT_EMAIL}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+      - RECIPIENT_EMAIL=${RECIPIENT_EMAIL}
     ports:
       - target: 5300
         published: 5300
