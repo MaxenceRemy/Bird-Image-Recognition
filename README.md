@@ -151,7 +151,8 @@ Le reste du code est considéré comme ancien et ne doit être executé qu'à de
 1. Installer Docker Desktop et le lancer
 2. Cloner le repository et aller dans le dossier Docker
 3. Compléter le fichier .env situé dans le dossier Docker (pas celui à la racine) avec vos identifiants Gmail (il ne faut pas utiliser le mot de passe du compte, mais générer un "App password" via l'interface de Gestion du compte Google)
-4. Ajouter ensuite dans le même .env vos identifiants Kaggle (connectez-vous à votre compte kaggle.com puis "Settings > API > Create New Token")
+   3.1. Si les identifiants sont déjà présents, indiquez simplement le mail qui reçevra les alertes.
+5. Ajouter ensuite dans le même .env vos identifiants Kaggle (connectez-vous à votre compte kaggle.com puis "Settings > API > Create New Token")
 
 **Version sans docker (non recommandée) :**
 
@@ -165,8 +166,12 @@ Le reste du code est considéré comme ancien et ne doit être executé qu'à de
 **Version docker (conseillé) :**
 
 1. Entrez dans le répertoire Docker du projet avec le terminal
-2. Si vous avez une carte graphique Nvidia : `docker-compose -f docker-compose-nvidia.yml up`
-3. Si vous n'avez pas de carte graphique Nvidia ou vous n'êtes pas sur : `docker-compose -f docker-compose.yml up`
+2. Exécuter ./clean.ps1 sur Windows ou ./clean.sh sur Linux (il faut exécuter cette commande avant tout docker compose, à chaque fois)
+   2.1 Il est possible de commenter ou non la ligne supprimant le volume : `docker volume rm docker_main_volume`. Il est préférable de la commenter si l'on ne souhaite pas tout télécharger à nouveau.
+4. Si vous avez une carte graphique Nvidia : `docker-compose -f docker-compose-nvidia.yml up`
+5. Si vous n'avez pas de carte graphique Nvidia ou vous n'êtes pas sur : `docker-compose -f docker-compose.yml up`
+6. IMPORTANT : lors de la création du volume, le dataset sera téléchargé et le preprocessing lancé. Les routes des API indiqueront qu'il faut attendre mais le Streamlit peut indiquer des erreurs.
+Il suffit de patienter jusqu'à recevoir le mail de confirmation de la fin de l'opération.
 
 **Version sans docker (non recommandée) :**
 
