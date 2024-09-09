@@ -9,7 +9,7 @@ on:
 jobs:
   build-and-test:
     # runs-on: ubuntu-latest
-    runs-on: [self-hosted, GUILLAUME-PC]
+    runs-on: [GUILLAUME-PC]
 
     steps:
     - uses: actions/checkout@v3
