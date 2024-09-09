@@ -11,4 +11,5 @@ ADD system_monitor.py .
 ADD drift_monitor.py .
 ADD alert_system.py .
 ADD supervisord.conf .
+RUN mkdir -p /home/app/volume_data/logs
 CMD ["/usr/bin/supervisord"]
