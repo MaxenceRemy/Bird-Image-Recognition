@@ -10,8 +10,8 @@ logger = setup_logger("alert_system", "logs/alert_system.log")
 
 class AlertSystem:
     def __init__(self):
-        self.from_email = os.getenv("ALERT_EMAIL")
-        self.password = os.getenv("EMAIL_PASSWORD")
+        self.from_email = os.getenv("SENDER_EMAIL")
+        self.password = os.getenv("SENDER_EMAIL_PASSWORD")
         self.to_email = os.getenv("RECIPIENT_EMAIL")
         self.smtp_server = "smtp.gmail.com"
         self.smtp_port = 465  # Port pour SSL
