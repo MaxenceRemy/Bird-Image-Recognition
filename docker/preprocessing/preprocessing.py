@@ -229,6 +229,7 @@ try:
         logging.info("Toutes les opérations ont été effecutées avec succès !")
 except Exception as e:
     logging.error(f"Erreur lors du premier lancement : {e}")
+    alert_system.send_alert(subject="Erreur lors du preprocessing", message=f"Erreur lors du premier lancement : {e}")
 
 try:
     # On charge le dictionnaire de tracking des classes
@@ -240,6 +241,7 @@ try:
         logging.info("Chargement des données de tracking du dataset")
 except Exception as e:
     logging.error(f"Erreur lors de l'ouverture du fichier de tracking : {e}")
+    alert_system.send_alert(subject="Erreur lors du preprocessing", message=f"Erreur lors de l'ouverture du fichier de tracking : {e}")
 
 
 # Tous les jours à 12h, on vérifie la présence d'un nouveau dataset
@@ -334,11 +336,13 @@ while True:
             )
     except Exception as e:
         logging.error(f"Erreur lors du tracking des classes : {e}")
+        alert_system.send_alert(subject="Erreur lors du preprocessing", message=f"Erreur lors du tracking des classes : {e}")
 
     try:
         # On fait tourner le scheduler pour le téléchargement automatique du dataset
         schedule.run_pending()
     except Exception as e:
         logging.error(f"Error lors de la recherche de mise à jour du dataset : {e}")
+        alert_system.send_alert(subject="Erreur lors du preprocessing", message=f"Error lors de la recherche de mise à jour du dataset : {e}")
     # On attends 5 secondes à chaque exécution de la boucle pour ne pas saturer le processeur
     time.sleep(5)

@@ -3,40 +3,35 @@ import numpy as np
 from fastapi import FastAPI, HTTPException, Body
 from tensorflow.keras.preprocessing import image
 from tensorflow.keras.applications.efficientnet import preprocess_input
-from tensorflow.keras.applications import EfficientNetB0
-from tensorflow.keras.layers import Dense, Dropout, GlobalAveragePooling2D
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from tensorflow.keras import Model
 from tensorflow.keras.models import load_model
 import logging
 import tensorflow as tf
 import time
-import shutil
 import json
 
-
+# On lance le serveur FastAPI
 app = FastAPI()
 
+# On créer les différents chemins
 volume_path = 'volume_data'
-
 log_folder = os.path.join(volume_path, "logs")
+mlruns_path = os.path.join(volume_path, 'mlruns')
+
+# On créer le dossier si nécessaire
 os.makedirs(log_folder, exist_ok = True)
+
+# On configure le logging pour les informations et les erreurs
 logging.basicConfig(filename=os.path.join(log_folder, "inference.log"), level=logging.INFO, 
                     format='%(asctime)s %(levelname)s %(message)s', 
                     datefmt='%d/%m/%Y %I:%M:%S %p')
 
-mlruns_path = os.path.join(volume_path, 'mlruns')
+# Cette variable s'incrémente dès que le temps d'inférence est trop long
 too_long_inference = 0
     
-
 class predictClass:
     def __init__(self, model_path, img_size=(224, 224)):
         self.img_size = img_size
         self.model_path = model_path
-        
-        # Vérifier l'existence du fichier modèle et du dossier de test
-        if not os.path.exists(self.model_path):
-            raise FileNotFoundError(f"Le fichier modèle {self.model_path} n'existe pas.")
         
         # Configurer GPU si disponible
         self.configure_gpu()
