@@ -39,6 +39,7 @@ logging.basicConfig(
     datefmt="%d/%m/%Y %I:%M:%S %p",
 )
 
+# On instancie la classe qui permet d'envoyer des alertes par email
 alert_system = AlertSystem()
 
 
