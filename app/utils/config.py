@@ -13,7 +13,7 @@ DRIFT_THRESHOLDS = {
 EMAIL_CONFIG = {
     "smtp_server": "smtp.gmail.com",
     "smtp_port": 587,
-    "sender_email": "yoniedery26@gmail.com",
-    "receiver_email": "yoniedery26@gmail.com",  # changer ceci si nécessaire
-    "password": os.getenv("EMAIL_PASSWORD"),
+    "sender_email": os.getenv("SENDER_EMAIL"),
+    "receiver_email": os.getenv("ALERT_EMAIL"),
+    "password": os.getenv("SENDER_EMAIL_PASSWORD"),
 }
