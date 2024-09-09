@@ -2,8 +2,8 @@ import os
 from monitoring.alert_system import AlertSystem
 
 # Configuration des variables d'environnement pour le test
-os.environ["ALERT_EMAIL"] = ""
-os.environ["EMAIL_PASSWORD"] = ""
+os.environ["SENDER_EMAIL"] = ""
+os.environ["SENDER_EMAIL_PASSWORD"] = ""
 os.environ["RECIPIENT_EMAIL"] = ""
 
 alert_system = AlertSystem()
