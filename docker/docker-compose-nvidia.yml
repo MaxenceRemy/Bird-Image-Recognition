@@ -49,6 +49,13 @@ services:
       - RECIPIENT_EMAIL=${RECIPIENT_EMAIL}
     volumes:
       - main_volume:/home/app/volume_data
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
 
   training:
     build:
@@ -62,6 +69,13 @@ services:
       - RECIPIENT_EMAIL=${RECIPIENT_EMAIL}
     volumes:
       - main_volume:/home/app/volume_data
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
 
   preprocessing:
     build:
@@ -90,6 +104,13 @@ services:
       - RECIPIENT_EMAIL=${RECIPIENT_EMAIL}
     volumes:
       - main_volume:/home/app/volume_data
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
 
   mlflowui:
     build:
