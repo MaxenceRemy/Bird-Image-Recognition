@@ -8,7 +8,8 @@ on:
 
 jobs:
   build-and-test:
-    runs-on: ubuntu-latest
+    # runs-on: ubuntu-latest
+    runs-on: [self-hosted, GUILLAUME-PC]
 
     steps:
     - uses: actions/checkout@v3
@@ -27,7 +28,6 @@ jobs:
       run: |
         echo '{"username":"${{ secrets.KAGGLE_USERNAME }}","key":"${{ secrets.KAGGLE_KEY }}"}' > kaggle.json
         chmod 400 kaggle.json
-
 
 
 
