@@ -14,6 +14,6 @@ EMAIL_CONFIG = {
     "smtp_server": "smtp.gmail.com",
     "smtp_port": 587,
     "sender_email": os.getenv("SENDER_EMAIL"),
-    "receiver_email": os.getenv("ALERT_EMAIL"),
+    "receiver_email": os.getenv("RECIPIENT_EMAIL"),
     "password": os.getenv("SENDER_EMAIL_PASSWORD"),
 }
