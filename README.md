@@ -145,17 +145,17 @@ Cela permet à l'un d'attendre que l'autre est fini pour se lancer et évite des
 
 **Version docker (conseillé) :**
 
-1. Installer Docker Desktop et le lancer.
-2. Cloner ce repository (dans un terminal : git clone https://github.com/MaxenceRemy/Bird-Image-Recognition.git)
-3. Compléter le fichier .env
-4. Ajouter à la racine du répertoire du projet le fichier de configuration Kaggle (kaggle.json) : Connectez-vous à votre compte kaggle.com puis "Settings > API > Create New Token"
+1. Installer Docker Desktop et le lancer
+2. Télécharger dans le même dossier docker-compose.yml (si vous avez un GPU Nvidia, téléchargez docker-compose-nvidia.yml pour accéléler les conteneurs)
+3. Compléter le fichier .env situé dans le dossier Docker avec vos identifiants Gmail (il ne faut pas utiliser le mot de passe du compte, mais générer un "App password" via l'interface de Gestion du compte Google)
+4. Ajouter ensuite dans le même .env vos identifiants Kaggle (connectez-vous à votre compte kaggle.com puis "Settings > API > Create New Token")
 
 **Version sans docker :**
 
 1. Clonez ce repository
 2. Installez les dépendances : `pip install -r requirements.txt`
-3. Compléter le fichier .env
-4. Ajouter à la racine du répertoire du projet le fichier de configuration Kaggle (kaggle.json) : Connectez-vous à votre compte kaggle.com puis "Settings > API > Create New Token"
+3. Compléter le fichier .env situé à a racine du projet avec vos identifiants Gmail (il ne faut pas utiliser le mot de passe du compte, mais générer un "App password" via l'interface de Gestion du compte Google)
+4. Ajouter ensuite dans le même .env vos identifiants Kaggle (connectez-vous à votre compte kaggle.com puis "Settings > API > Create New Token")
 
 ## Utilisation
 
