@@ -12,13 +12,18 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from sklearn.metrics import confusion_matrix
 
 # region Configuration
-volume_path = "/home/app/volume_data"
+
+# On créer les différents chemins
+volume_path = "volume_data"
 dataset_path = os.path.join(volume_path, "dataset_clean")
 test_set_path = os.path.join(dataset_path, "test")
 mlruns_path = os.path.join(volume_path, "mlruns")
 log_folder = os.path.join(volume_path, "logs")
 experiment_id = "157975935045122495"
 
+# On créer le dossier si nécessaire
+
+# On configure le logging pour les informations et les erreurs
 os.makedirs(log_folder, exist_ok=True)
 logging.basicConfig(filename=os.path.join(log_folder, "drift_monitor.log"), level=logging.INFO,
                     format='%(asctime)s %(levelname)s %(message)s',
@@ -27,6 +32,10 @@ logging.basicConfig(filename=os.path.join(log_folder, "drift_monitor.log"), leve
 
 
 class DriftMonitor:
+    """
+    Classe chargée de détecter une dérive du modèle au fur et à mesure que de nouvelles
+    images sont ajoutées (la comparaison n'est pas faite avec les nouvelles classes)
+    """
     def __init__(self):
         logging.info("Début d'exécution du script de drift monitoring.")
         self.img_size = (224, 224)
@@ -182,10 +191,14 @@ class DriftMonitor:
 
 def main():
 
-    drift_monitor = DriftMonitor()
-    df = drift_monitor.make_current_model_confusion_matrix()
-    df = drift_monitor.compare_confusion_matrix(df)
-    drift_monitor.send_report_email(df)
+    try:
+        drift_monitor = DriftMonitor()
+        df = drift_monitor.make_current_model_confusion_matrix()
+        df = drift_monitor.compare_confusion_matrix(df)
+        drift_monitor.send_report_email(df)
+    except Exception as e:
+        logging.error(f"Erreur lors de l'exécution du suivi de dérive du modèle: {e}")
+        
 
 
 if __name__ == "__main__":

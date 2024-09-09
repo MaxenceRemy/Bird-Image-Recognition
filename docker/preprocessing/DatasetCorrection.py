@@ -3,6 +3,7 @@ import requests
 import os
 import shutil
 
+
 class DatasetCorrection:
 
     def __init__(self, db_to_clean, test_mode: bool = False):
@@ -88,7 +89,6 @@ class DatasetCorrection:
         Correction du dataset (harmonisation des noms binominaux et vernaculaires anglais, correction de fautes,
         gestion des races, correction des chemins, création du nouveau csv)
         """
-
 
         df = pd.read_csv(f"{self.db_to_clean}/birds.csv", sep=",")
         birds_list_df = pd.read_csv(f"{self.db_to_clean}/birds_list.csv", index_col="index", sep=",")

@@ -20,9 +20,9 @@ state_folder = os.path.join(volume_path, "containers_state")
 state_path = os.path.join(state_folder, "preprocessing_state.txt")
 training_state_path = os.path.join(state_folder, "training_state.txt")
 log_folder = os.path.join(volume_path, "logs")
-os.makedirs(log_folder, exist_ok=True)
 
 # On créer les dossiers si nécessaire
+os.makedirs(log_folder, exist_ok=True)
 os.makedirs(state_folder, exist_ok=True)
 os.makedirs(dataset_raw_path, exist_ok=True)
 os.makedirs(dataset_clean_path, exist_ok=True)
@@ -227,6 +227,7 @@ try:
         # On indique que ce container est inactif
         with open(state_path, "w") as file:
             file.write("0")
+
         logging.info("Toutes les opérations ont été effecutées avec succès !")
 except Exception as e:
     logging.error(f"Erreur lors du premier lancement : {e}")

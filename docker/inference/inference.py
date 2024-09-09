@@ -37,6 +37,8 @@ logging.basicConfig(
 # Cette variable s'incrémente dès que le temps d'inférence est trop long
 too_long_inference = 0
 
+# ----------------------------------------------------------------------------------------- #
+
 
 class predictClass:
     """
@@ -168,7 +170,7 @@ async def predict(file_name: str):
             f"""Prédiction effectuée : id modèle = {run_id}, image_name = {file_name},
             classe = {meilleures_classes}, score = {meilleurs_scores}"""
         )
-
+        time.sleep(2)
         # On calcule temps qui a été nécessaire
         end_time = time.time()
         total_time = end_time - start_time
@@ -178,6 +180,7 @@ async def predict(file_name: str):
         if too_long_inference > 3:
             # On envoie un email pour indiquer que les 4 dernières inférences étaient trop longues
             too_long_inference = 0
+            logging.error("Lenteur détectée pour l'inférence...")
             alert_system.send_alert(
                 subject="Lenteur du container d'inférence",
                 message="""Les 4 dernières inférences ont pris plus de
@@ -193,6 +196,10 @@ async def predict(file_name: str):
 
     except Exception as e:
         logging.error(f"Un problème est survenu lors de l'inférence: {e}")
+        alert_system.send_alert(
+                subject="Erreur lors de l'inférence",
+                message=f"Un problème est survenu lors de l'inférence: {e}",
+            )
         raise HTTPException(
             status_code=500, detail=f"Un problème est survenu lors de l'inférence: {e}"
         )
@@ -215,6 +222,10 @@ async def switch_model(run_id: str = Body(...)):
 
     except Exception as e:
         logging.error(f"Le changement de modèle n'a pas fonctionné : {e}")
+        alert_system.send_alert(
+                subject="Erreur lors de l'inférence",
+                message=f"Le changement de modèle n'a pas fonctionné : {e}",
+            )
         raise HTTPException(
             status_code=500, detail=f"Le changement de modèle n'a pas fonctionné : {e}"
         )

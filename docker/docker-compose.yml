@@ -44,7 +44,7 @@ services:
     container_name: inference
     environment:
       - ALERT_EMAIL=raspberrypisender6@gmail.com
-      - EMAIL_PASSWORD=seet pbgx mmme uyzz
+      - EMAIL_PASSWORD=ehrx kcnp cshn uiwa
       - RECIPIENT_EMAIL=maxenceremy1@gmail.com
     volumes:
       - main_volume:/home/app/volume_data
@@ -62,6 +62,10 @@ services:
       dockerfile: Dockerfile
     image: training:latest
     container_name: training
+    environment:
+      - ALERT_EMAIL=raspberrypisender6@gmail.com
+      - EMAIL_PASSWORD=ehrx kcnp cshn uiwa
+      - RECIPIENT_EMAIL=maxenceremy1@gmail.com
     volumes:
       - main_volume:/home/app/volume_data
     deploy:
@@ -80,7 +84,7 @@ services:
     container_name: preprocessing
     environment:
       - ALERT_EMAIL=raspberrypisender6@gmail.com
-      - EMAIL_PASSWORD=seet pbgx mmme uyzz
+      - EMAIL_PASSWORD=ehrx kcnp cshn uiwa
       - RECIPIENT_EMAIL=maxenceremy1@gmail.com
       - KAGGLE_KEY=1621a0994590fcb62ad5542ffcc6aec3
       - KAGGLE_USERNAME=maxenceremyharoche
@@ -95,7 +99,7 @@ services:
     container_name: monitoring
     environment:
       - ALERT_EMAIL=raspberrypisender6@gmail.com
-      - EMAIL_PASSWORD=seet pbgx mmme uyzz
+      - EMAIL_PASSWORD=ehrx kcnp cshn uiwa
       - RECIPIENT_EMAIL=maxenceremy1@gmail.com
     volumes:
       - main_volume:/home/app/volume_data
