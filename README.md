@@ -143,6 +143,9 @@ Cela permet à l'un d'attendre que l'autre est fini pour se lancer et évite des
 
 ## Installation
 
+**IMPORTANT** : seule la version docker est à jour avec toutes les dernières améliorations. Le code le plus récent se situe donc uniquement dans le dossier Docker.
+Le reste du code est considéré comme ancien et ne doit être executé qu'à des fins d'expérimentation.
+
 **Version docker (conseillé) :**
 
 1. Installer Docker Desktop et le lancer
@@ -150,7 +153,7 @@ Cela permet à l'un d'attendre que l'autre est fini pour se lancer et évite des
 3. Compléter le fichier .env situé dans le dossier Docker (pas celui à la racine) avec vos identifiants Gmail (il ne faut pas utiliser le mot de passe du compte, mais générer un "App password" via l'interface de Gestion du compte Google)
 4. Ajouter ensuite dans le même .env vos identifiants Kaggle (connectez-vous à votre compte kaggle.com puis "Settings > API > Create New Token")
 
-**Version sans docker :**
+**Version sans docker (non recommandée) :**
 
 1. Clonez ce repository
 2. Installez les dépendances : `pip install -r requirements.txt`
@@ -165,7 +168,7 @@ Cela permet à l'un d'attendre que l'autre est fini pour se lancer et évite des
 2. Si vous avez une carte graphique Nvidia : `docker-compose -f docker-compose-nvidia.yml up`
 3. Si vous n'avez pas de carte graphique Nvidia ou vous n'êtes pas sur : `docker-compose -f docker-compose.yml up`
 
-**Version sans docker :**
+**Version sans docker (non recommandée) :**
 
 - Pour exécuter la pipeline complète : `python scripts/pipeline.py`
     - Pour télécharger le dataset : `python scripts/downloadDataset.py`
