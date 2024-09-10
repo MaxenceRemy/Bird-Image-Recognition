@@ -616,8 +616,8 @@ elif page == "Interface utilisateur (APIs)":
                             st.rerun()
                     else:
                         st.error("Échec de la prédiction")
-                except requests.RequestException:
-                    st.error("Impossible de communiquer avec l'API d'inférence")
+                except Exception as e:
+                    st.error(f"Impossible de communiquer avec l'API d'inférence : {e}")
 
     else:
         st.subheader("API Admin")
