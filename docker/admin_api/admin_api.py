@@ -81,7 +81,9 @@ def load_authorized_users():
 
 AUTHORIZED_USERS = load_authorized_users()
 
+
 # ----------------------------------------------------------------------------------------- #
+
 
 # On utilise le modèle Pydantic pour le token
 class Token(BaseModel):
@@ -163,7 +165,9 @@ def update_authorized_users(users):
         # On actualise le fichier
         json.dump(users, f, indent=4)
 
+
 # ----------------------------------------------------------------------------------------- #
+
 
 # Route pour obtenir un token
 @app.post("/token", response_model=Token)

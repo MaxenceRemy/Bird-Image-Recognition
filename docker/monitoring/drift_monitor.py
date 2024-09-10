@@ -132,20 +132,20 @@ class DriftMonitor:
         """
         df["Precision"] = df.apply(
             lambda row: df.loc[row.name, row.name] / df[row.name].sum()
-                if df[row.name].sum() != 0
-                else 0,
+            if df[row.name].sum() != 0
+            else 0,
             axis=1
         )
         df["Recall"] = df.apply(
             lambda row: df.loc[row.name, row.name] / df.loc[row.name].sum()
-                if df.loc[row.name].sum() != 0
-                else 0,
+            if df.loc[row.name].sum() != 0
+            else 0,
             axis=1
         )
         df["f1-score"] = df.apply(
             lambda row: (2 * row["Precision"] * row["Recall"]) / (row["Precision"] + row["Recall"])
-                if (row["Precision"] + row["Recall"]) != 0
-                else 0,
+            if (row["Precision"] + row["Recall"]) != 0
+            else 0,
             axis=1
         )
 
