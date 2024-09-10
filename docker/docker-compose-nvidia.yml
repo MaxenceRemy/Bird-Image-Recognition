@@ -41,7 +41,10 @@ services:
       - main_volume:/home/app/volume_data
 
   inference:
-    image: smartrmax/inference:latest
+    build:
+      context: ./inference
+      dockerfile: Dockerfile
+    image: inference:latest
     container_name: inference
     environment:
       - ALERT_EMAIL=${ALERT_EMAIL}
