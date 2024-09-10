@@ -138,7 +138,7 @@ Un rapport est envoyé tous les jours avec les 10 meilleures et pires classes ai
 
 8. **Gestion des conflits**
 Pour éviter des conflits entre les scripts de monitoring, de preprocessing et de training, chacun indique en permanence son état aux autres.
-Cela permet à l'un d'attendre que l'autre est fini pour se lancer et évite des erreurs ou corruption de données.
+Cela permet à l'un d'attendre que l'autre soit fini pour se lancer et éviter des erreurs ou corruption de données.
 
 
 ## Installation
