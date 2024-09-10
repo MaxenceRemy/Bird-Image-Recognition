@@ -143,47 +143,43 @@ Cela permet à l'un d'attendre que l'autre est fini pour se lancer et évite des
 
 ## Installation
 
-**IMPORTANT** : seule la version docker est à jour avec toutes les dernières améliorations. Le code le plus récent se situe donc uniquement dans le dossier Docker.
-Le reste du code est considéré comme ancien et ne doit être executé qu'à des fins d'expérimentation.
+**IMPORTANT** : seule la version docker est à jour avec toutes les dernières améliorations. Le code le plus récent se situe donc uniquement dans le dossier "docker".
+Le reste du code est considéré comme ancien et ne doit être exécuté qu'à des fins d'expérimentation.
 
-**Version docker (conseillé) :**
+**Version docker (recommandé) :**
 
-1. Installer Docker Desktop et le lancer
-2. Cloner le repository et aller dans le dossier Docker
-3. Compléter le fichier .env situé dans le dossier Docker (pas celui à la racine) avec vos identifiants Gmail (il ne faut pas utiliser le mot de passe du compte, mais générer un "App password" via l'interface de Gestion du compte Google)
-   3.1. Si les identifiants sont déjà présents, indiquez simplement le mail qui reçevra les alertes.
-5. Ajouter ensuite dans le même .env vos identifiants Kaggle (connectez-vous à votre compte kaggle.com puis "Settings > API > Create New Token")
+1. Installez Docker Desktop et lancez le.
+2. Clonez le repository et aller dans le dossier "docker".
+3. Complétez le fichier .env situé dans le dossier "docker" (et non celui à la racine) avec vos identifiants Gmail (il ne faut pas utiliser le mot de passe du compte, mais générez un "App password" via l'interface de gestion du compte Google).
+   3.1. Si les identifiants sont déjà présents, indiquez simplement le mail qui recevra les alertes.
+5. Ajoutez ensuite dans le même .env vos identifiants Kaggle (connectez-vous à votre compte kaggle.com puis "Settings > API > Create New Token").
 
-**Version sans docker (non recommandée) :**
+**Version sans docker (non recommandé) :**
 
-1. Clonez ce repository
+1. Clonez ce repository.
 2. Installez les dépendances : `pip install -r requirements.txt`
-3. Compléter le fichier .env situé à a racine du projet avec vos identifiants Gmail (il ne faut pas utiliser le mot de passe du compte, mais générer un "App password" via l'interface de Gestion du compte Google)
-4. Ajouter ensuite dans le même .env vos identifiants Kaggle (connectez-vous à votre compte kaggle.com puis "Settings > API > Create New Token")
+3. Complétez le fichier .env situé à la racine du projet avec vos identifiants Gmail (il ne faut pas utiliser le mot de passe du compte, mais générez un "App password" via l'interface de Gestion du compte Google).
+4. Ajoutez ensuite dans le même .env vos identifiants Kaggle (connectez-vous à votre compte kaggle.com puis "Settings > API > Create New Token").
 
 ## Utilisation
 
-**Version docker (conseillé) :**
+**Version docker (recommandé) :**
 
-1. Entrez dans le répertoire Docker du projet avec le terminal
-2. Exécuter ./clean.ps1 sur Windows ou ./clean.sh sur Linux (il faut exécuter cette commande avant tout docker compose, à chaque fois)
+1. Entrez dans le répertoire "docker" du projet avec le terminal
+2. Exécutez `./clean.ps1` sur Windows ou `./clean.sh` sur Linux (il faut exécuter cette commande avant tout docker compose, à chaque fois)
    2.1 Il est possible de commenter ou non la ligne supprimant le volume : `docker volume rm docker_main_volume`. Il est préférable de la commenter si l'on ne souhaite pas tout télécharger à nouveau.
 4. Si vous avez une carte graphique Nvidia : `docker-compose -f docker-compose-nvidia.yml up`
 5. Si vous n'avez pas de carte graphique Nvidia ou vous n'êtes pas sur : `docker-compose -f docker-compose.yml up`
-6. IMPORTANT : lors de la création du volume, le dataset sera téléchargé et le preprocessing lancé. Les routes des API indiqueront qu'il faut attendre mais le Streamlit peut indiquer des erreurs.
-Il suffit de patienter jusqu'à recevoir le mail de confirmation de la fin de l'opération.
+6. IMPORTANT : lors de la création du volume, le dataset sera téléchargé et le preprocessing lancé. Les routes des API indiqueront qu'il faut attendre mais l'interface Streamlit peut indiquer des erreurs.
+Il suffit de patienter jusqu'à recevoir le mail de confirmation à la fin de l'opération.
 
-**Version sans docker (non recommandée) :**
+**Version sans docker (non recommandé) :**
 
 - Pour exécuter la pipeline complète : `python scripts/pipeline.py`
     - Pour télécharger le dataset : `python scripts/downloadDataset.py`
     - Pour effectuer le traitement obligatoire des données : `python preprocessing/preprocess_dataset.py`
     - Pour entraîner le modèle : `python training/train_model.py`
 - Pour lancer l'interface Streamlit : `streamlit run streamlit_app.py`
-
-## Documentation
-
-Pour une documentation plus détaillée, veuillez consulter le dossier `docs/`.
 
 ## Contribution
 
