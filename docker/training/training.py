@@ -113,32 +113,22 @@ def add_metrics(df: pd.DataFrame) -> pd.DataFrame:
     try:
         # On calcule la précision basée sur les valeurs diagonales de la matrice
         df["Precision"] = df.apply(
-            lambda row: np.where(
-                df[row.name].sum() != 0,
-                df.loc[row.name, row.name] / df[row.name].sum(),
-                0,
-            ),
-            axis=1,
+            lambda row: df.loc[row.name, row.name] / df[row.name].sum()
+                if df[row.name].sum() != 0
+                else 0,
+            axis=1
         )
-
-        # On calcule le recall basé sur les valeurs diagonales de la matrice
         df["Recall"] = df.apply(
-            lambda row: np.where(
-                df.loc[row.name].sum() != 0,
-                df.loc[row.name, row.name] / df.loc[row.name].sum(),
-                0,
-            ),
-            axis=1,
+            lambda row: df.loc[row.name, row.name] / df.loc[row.name].sum()
+                if df.loc[row.name].sum() != 0
+                else 0,
+            axis=1
         )
-
-        # On calcule le score F1 basé sur les valeurs diagonales de la matrice
         df["f1-score"] = df.apply(
-            lambda row: np.where(
-                (row["Precision"] + row["Recall"]) != 0,
-                (2 * row["Precision"] * row["Recall"]) / (row["Precision"] + row["Recall"]),
-                0,
-            ),
-            axis=1,
+            lambda row: (2 * row["Precision"] * row["Recall"]) / (row["Precision"] + row["Recall"])
+                if (row["Precision"] + row["Recall"]) != 0
+                else 0,
+            axis=1
         )
 
         return df
