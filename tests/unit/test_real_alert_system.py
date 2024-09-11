@@ -12,6 +12,6 @@ result = alert_system.send_alert("Test Subject", "Test Message")
 print("Email sent:", result)
 
 # Nettoyage des variables d'environnement après le test
-del os.environ["ALERT_EMAIL"]
-del os.environ["EMAIL_PASSWORD"]
+del os.environ["SENDER_EMAIL"]
+del os.environ["SENDER_EMAIL_PASSWORD"]
 del os.environ["RECIPIENT_EMAIL"]
