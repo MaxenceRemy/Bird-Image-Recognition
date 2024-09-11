@@ -175,7 +175,7 @@ Le reste du code est considéré comme ancien et ne doit être exécuté qu'à d
 6. IMPORTANT : lors de la création du volume, le dataset sera téléchargé et le preprocessing lancé. Les routes des API indiqueront qu'il faut attendre mais l'interface Streamlit peut indiquer des erreurs.
 Il suffit de patienter jusqu'à recevoir le mail de confirmation à la fin de l'opération.
 
-Liste des applications web disponibles sur votre réseau local :
+- Liste des applications web disponibles sur votre réseau local :
     - API client (port 5000) : `http://localhost:5000/docs`
     - API administrative (port 5100) : `http://localhost:5100/docs`
     - Interface MLflow (port 5200) : `http://localhost:5200`
