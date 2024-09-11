@@ -21,8 +21,9 @@ mlruns_path = os.path.join(volume_path, "mlruns")
 log_folder = os.path.join(volume_path, "logs")
 experiment_id = "157975935045122495"
 state_folder = os.path.join(volume_path, "containers_state")
-state_path = os.path.join(state_folder, "monitoring_state.txt")
+state_path = os.path.join(state_folder, "drift_monitor_state.txt")
 preprocessing_state_path = os.path.join(state_folder, "preprocessing_state.txt")
+training_state_path = os.path.join(state_folder, "training_state.txt")
 
 # On créer les dossiers si nécessaire
 os.makedirs(log_folder, exist_ok=True)
@@ -93,6 +94,14 @@ class DriftMonitor:
             # Ajout des metriques au DataFrame
             confusion_df = pd.DataFrame(conf_matrix, index=class_labels, columns=class_labels)
             confusion_df = self.add_metrics(confusion_df)
+
+        except Exception as e:
+
+            logging.error(f"Erreur lors de la création de la matrice de confusion : {e}")
+            alert_system.send_alert(
+                subject="Erreur lors de la création de la matrice de confusion",
+                message=f"Erreur lors de la création de la matrice de confusion : {e}"
+            )
 
         finally:
 
@@ -215,13 +224,15 @@ class DriftMonitor:
 def main():
 
     try:
-        # La fonction reste en attente tant que le container de preprocessing est actif
-        with open(preprocessing_state_path, "r") as file:
-            state = file.read()
-        while state != "0":
-            with open(preprocessing_state_path, "r") as file:
-                state = file.read()
-            time.sleep(5)
+        # La fonction reste en attente tant que les containers de preprocessing et training sont actifs
+        with open(preprocessing_state_path, "r") as preprocessing_file:
+            with open(training_state_path, "r") as training_file:
+                preprocessing_state = preprocessing_file.read()
+                training_state = training_file.read()
+                while preprocessing_state != "0" or training_state != "0":
+                    time.sleep(5)
+                    preprocessing_state = preprocessing_file.read()
+                    training_state = training_file.read()
 
         # On indique que le container est actif
         with open(state_path, "w") as file:
@@ -233,14 +244,18 @@ def main():
         # On indique que le container est inactif
         with open(state_path, "w") as file:
             file.write("0")
+
     except Exception as e:
+
         logging.error(f"Erreur lors de l'exécution du suivi de dérive du modèle: {e}")
-        alert_system.send_alert(subject="Erreur lors du drift monitoring",
-                                message=f"Erreur lors de l'exécution du suivi de dérive du modèle: {e}")
+        alert_system.send_alert(
+            subject="Erreur lors du drift monitoring",
+            message=f"Erreur lors de l'exécution du suivi de dérive du modèle : {e}"
+        )
 
 
 if __name__ == "__main__":
-    schedule.every().day.at("21:32").do(main)
+    schedule.every().day.at("02:00").do(main)
     while True:
         schedule.run_pending()
         time.sleep(1)
