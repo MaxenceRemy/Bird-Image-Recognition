@@ -20,7 +20,6 @@ def download_dataset(
     """
     Télécharger la base de données d'oiseaux sur Kaggle et le placer dans le dossier passé en paramètre
     """
-  
     # Initialisation de l'API de Kaggle
     kaggle_api = KaggleApi()
     kaggle_api.authenticate()
