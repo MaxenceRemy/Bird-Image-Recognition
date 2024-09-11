@@ -89,12 +89,10 @@ def run_pipeline(test_dataset_mode: bool = False):
         try:
 
             data_path = os.path.join(BASE_DIR, "data")
-            download_dataset(
-                dataset_name="gpiosenka/100-bird-species",
-                destination_folder=data_path,
-                kaggle_json_path="./kaggle.json",
-            )  # Téléchargement du dataset Kaggle
-            data_version = preprocess_data(data_path=data_path, test_dataset_mode=test_dataset_mode)  # Préprocessing
+             # Téléchargement du dataset Kaggle
+            download_dataset(dataset_name="gpiosenka/100-bird-species", destination_folder=data_path)
+            # Préprocessing
+            data_version = preprocess_data(data_path=data_path, test_dataset_mode=test_dataset_mode)
 
             data_manager = DataManager()
             drift_monitor = DriftMonitor()
