@@ -315,7 +315,8 @@ elif page == "Schémas":
 
         3. **Production** :
         - Héberge le modèle optimisé pour des prédictions en temps réel sur les nouvelles images soumises.
-        - Peut être mis à jour régulièrement pour intégrer les améliorations basées sur les contributions des utilisateurs.
+        - Peut être mis à jour régulièrement pour intégrer les améliorations basées sur les contributions des \
+                 utilisateurs.
 
         4. **API client** :
         - Fournit des endpoints pour la soumission d'images, la récupération des prédictions, \
