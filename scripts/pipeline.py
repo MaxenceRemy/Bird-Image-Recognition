@@ -89,7 +89,7 @@ def run_pipeline(test_dataset_mode: bool = False):
         try:
 
             data_path = os.path.join(BASE_DIR, "data")
-             # Téléchargement du dataset Kaggle
+            # Téléchargement du dataset Kaggle
             download_dataset(dataset_name="gpiosenka/100-bird-species", destination_folder=data_path)
             # Préprocessing
             data_version = preprocess_data(data_path=data_path, test_dataset_mode=test_dataset_mode)
