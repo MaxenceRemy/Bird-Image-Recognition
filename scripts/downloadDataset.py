@@ -15,8 +15,7 @@ from kaggle.api.kaggle_api_extended import KaggleApi
 logger = setup_logger("download_dateset", "download_dateset.log")
 
 
-def download_dataset(
-    dataset_name: str = "gpiosenka/100-bird-species", destination_folder: str = "./data"):
+def download_dataset(dataset_name: str = "gpiosenka/100-bird-species", destination_folder: str = "./data"):
     """
     Télécharger la base de données d'oiseaux sur Kaggle et le placer dans le dossier passé en paramètre
     """
