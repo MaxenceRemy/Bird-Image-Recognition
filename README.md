@@ -5,6 +5,7 @@ Ce projet implémente un système de reconnaissance d'oiseaux basé sur des imag
 **IMPORTANT** : seule la version docker est à jour avec toutes les dernières améliorations. Le code le plus récent se situe donc uniquement dans le dossier "docker".
 Le reste du code est considéré comme ancien et ne doit être exécuté qu'à des fins d'expérimentation.
 
+
 ## Structure du projet
 
 - [Application](./app/) Modules principaux de l'application
@@ -32,6 +33,7 @@ Le reste du code est considéré comme ancien et ne doit être exécuté qu'à d
     - [Tests d'intégration](./tests/integration/) Tests d'intégration
     - [Tests unitaires](./tests/unit/) Tests unitaires
 - [Training](./training/) Scripts pour l'entraînement du modèle
+
 
 ## Explication du projet
 
@@ -152,8 +154,8 @@ Le reste du code est considéré comme ancien et ne doit être exécuté qu'à d
 
 1. Installez Docker Desktop et lancez le.
 2. Clonez le repository et aller dans le dossier "docker".
-3. Complétez le fichier .env situé dans le dossier "docker" (et non celui à la racine) avec vos identifiants Gmail (il ne faut pas utiliser le mot de passe du compte, mais générez un "App password" via l'interface de gestion du compte Google).
-   3.1. Si les identifiants sont déjà présents, indiquez simplement le mail qui recevra les alertes.
+3. Complétez le fichier .env situé dans le dossier "docker" (non celui à la racine du projet) avec vos identifiants Gmail (il ne faut pas utiliser le mot de passe du compte, mais générer un "App password" via l'interface de gestion du compte Google).
+   - Si des identifiants de tests sont déjà présents, indiquez simplement l'adresse email qui recevra les alertes.
 5. Ajoutez ensuite dans le même .env vos identifiants Kaggle (connectez-vous à votre compte kaggle.com puis "Settings > API > Create New Token").
 
 **Version sans docker (non recommandé) :**
@@ -163,17 +165,20 @@ Le reste du code est considéré comme ancien et ne doit être exécuté qu'à d
 3. Complétez le fichier .env situé à la racine du projet avec vos identifiants Gmail (il ne faut pas utiliser le mot de passe du compte, mais générez un "App password" via l'interface de Gestion du compte Google).
 4. Ajoutez ensuite dans le même .env vos identifiants Kaggle (connectez-vous à votre compte kaggle.com puis "Settings > API > Create New Token").
 
+
 ## Utilisation
 
 **Version docker (recommandé) :**
 
-1. Entrez dans le répertoire "docker" du projet avec le terminal
-2. Exécutez `./clean.ps1` sur Windows ou `./clean.sh` sur Linux (il faut exécuter cette commande avant tout docker compose, à chaque fois)
-   2.1 Il est possible de commenter ou non la ligne supprimant le volume : `docker volume rm docker_main_volume`. Il est préférable de la commenter si l'on ne souhaite pas tout télécharger à nouveau.
-4. Si vous avez une carte graphique Nvidia : `docker-compose -f docker-compose-nvidia.yml up`
-5. Si vous n'avez pas de carte graphique Nvidia ou vous n'êtes pas sur : `docker-compose -f docker-compose.yml up`
-6. IMPORTANT : lors de la création du volume, le dataset sera téléchargé et le preprocessing lancé. Les routes des API indiqueront qu'il faut attendre mais l'interface Streamlit peut indiquer des erreurs.
-Il suffit de patienter jusqu'à recevoir le mail de confirmation à la fin de l'opération.
+1. Entrez dans le répertoire "docker" du projet avec le terminal.
+2. Avant chaque docker compose, nettoyer les conteneurs.
+    - Il est possible de commenter ou non la ligne supprimant le volume : `docker volume rm docker_main_volume`. Il est préférable de la commenter si vous ne souhaitez pas retélécharger le dataset à nouveau.
+    - Sur Windows, exécutez `./clean.ps1`.
+    - Sur Linux, exécutez `./clean.sh`.
+3. Lancez les conteneurs.
+    - Si vous avez une carte graphique Nvidia : `docker-compose -f docker-compose-nvidia.yml up`.
+    - Si vous n'avez pas de carte graphique Nvidia ou que vous n'êtes pas sûr : `docker-compose -f docker-compose.yml up`.
+**IMPORTANT** : lors de la création du volume, le dataset sera téléchargé et le preprocessing lancé. Les routes des API indiqueront qu'il faut attendre mais l'interface Streamlit peut indiquer des erreurs. Il suffit de patienter jusqu'à recevoir le mail de confirmation à la fin de l'opération.
 
 - Liste des applications web disponibles sur votre réseau local :
     - API client (port 5000) : `http://localhost:5000/docs`
@@ -181,12 +186,15 @@ Il suffit de patienter jusqu'à recevoir le mail de confirmation à la fin de l'
     - Interface MLflow (port 5200) : `http://localhost:5200`
     - Interface Streamlit (port 5300) : `http://localhost:5300`
 
+Vous pourrez interagir avec les APIs en tant qu'administrateur avec les identifiants admin/admin ou en tant qu'utilisateur classique avec les identifiants user/user.
+
 **Version sans docker (non recommandé) :**
 
 - Pour exécuter la pipeline complète : `python scripts/pipeline.py`
     - Pour télécharger le dataset : `python scripts/downloadDataset.py`
     - Pour effectuer le traitement obligatoire des données : `python preprocessing/preprocess_dataset.py`
     - Pour entraîner le modèle : `python training/train_model.py`
+
 
 ## Contribution
 

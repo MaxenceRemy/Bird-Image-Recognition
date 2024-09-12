@@ -1,5 +1,5 @@
 FROM ubuntu:20.04
-ADD requirements.txt .
+COPY requirements.txt .
 RUN apt-get update && apt-get install python3-pip -y && pip3 install -r requirements.txt
 WORKDIR /home/app/
 COPY streamlit.py .

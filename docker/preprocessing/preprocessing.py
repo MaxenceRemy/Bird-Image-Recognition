@@ -19,7 +19,7 @@ classes_tracking_path = os.path.join(dataset_raw_path, "classes_tracking.json")
 state_folder = os.path.join(volume_path, "containers_state")
 state_path = os.path.join(state_folder, "preprocessing_state.txt")
 training_state_path = os.path.join(state_folder, "training_state.txt")
-monitoring_state_path = os.path.join(state_folder, "monitoring_state.txt")
+monitoring_state_path = os.path.join(state_folder, "drift_monitor_state.txt")
 log_folder = os.path.join(volume_path, "logs")
 
 # On créer les dossiers si nécessaire
@@ -72,21 +72,15 @@ def start_cleaning(new_classes_to_track=[]):
     Lance le nettoyage de la base de données en copiant les classes suffisamenent grandes de
     dataset_raw vers dataset_clean et en appliquant le preprocessing.
     """
-    # La fonction reste en attente tant que le container de training est actif
-    with open(training_state_path, "r") as file:
-        state = file.read()
-    while state == "1":
-        with open(training_state_path, "r") as file:
-            state = file.read()
-        time.sleep(5)
-
-    # La fonction reste en attente tant que le container de monitoring est actif
-    with open(monitoring_state_path, "r") as file:
-        state = file.read()
-    while state == "1":
-        with open(monitoring_state_path, "r") as file:
-            state = file.read()
-        time.sleep(5)
+    # La fonction reste en attente tant que les containers de training et drift_monitoring sont actifs
+    with open(training_state_path, "r") as training_file:
+        with open(monitoring_state_path, "r") as monitoring_file:
+            training_state = training_file.read()
+            monitoring_state = monitoring_file.read()
+            while training_state == "1" or monitoring_state == "1":
+                time.sleep(5)
+                training_state = training_file.read()
+                monitoring_state = monitoring_file.read()
 
     # On indique que ce container est actif
     with open(state_path, "w") as file:
