@@ -12,8 +12,8 @@ class TestAlertSystem(unittest.TestCase):
 
     def setUp(self):
         # Assurez-vous que ces variables d'environnement sont définies avant d'exécuter les tests
-        self.alert_email = os.getenv("ALERT_EMAIL")
-        self.email_password = os.getenv("EMAIL_PASSWORD")
+        self.alert_email = os.getenv("SENDER_EMAIL")
+        self.email_password = os.getenv("SENDER_EMAIL_PASSWORD")
         self.recipient_email = os.getenv("RECIPIENT_EMAIL")
 
         if not all([self.alert_email, self.email_password, self.recipient_email]):
@@ -34,10 +34,10 @@ class TestAlertSystem(unittest.TestCase):
 
     def test_send_alert_with_invalid_credentials(self):
         # Sauvegardez le mot de passe correct
-        correct_password = os.environ["EMAIL_PASSWORD"]
+        correct_password = os.environ["SENDER_EMAIL_PASSWORD"]
 
         # Remplacez temporairement par un mot de passe invalide
-        os.environ["EMAIL_PASSWORD"] = "invalid_password"
+        os.environ["SENDER_EMAIL_PASSWORD"] = "invalid_password"
 
         # Réinitialisez l'AlertSystem pour qu'il utilise le nouveau mot de passe
         self.alert_system = AlertSystem()
@@ -51,7 +51,7 @@ class TestAlertSystem(unittest.TestCase):
         self.assertFalse(result, "L'alerte a été envoyée malgré des identifiants invalides")
 
         # Restaurez le mot de passe correct
-        os.environ["EMAIL_PASSWORD"] = correct_password
+        os.environ["SENDER_EMAIL_PASSWORD"] = correct_password
 
 
 if __name__ == "__main__":

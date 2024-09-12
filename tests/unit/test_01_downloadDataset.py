@@ -22,7 +22,6 @@ class TestDownloadDataset(unittest.TestCase):
         logger.info("Début de test unitaire de downloadDataset.py")
 
         cls.dataset_name = "gpiosenka/100-bird-species"
-        cls.kaggle_json_path = "./kaggle.json"
 
         cls.main_folder = "./data"
         cls.train_folder = f"{cls.main_folder}/train"
@@ -39,11 +38,8 @@ class TestDownloadDataset(unittest.TestCase):
         """
         logger.info("Test 01 : main")
 
-        download_dataset(
-            dataset_name=self.dataset_name,
-            destination_folder=self.main_folder,
-            kaggle_json_path=self.kaggle_json_path,
-        )  # Téléchargement du dataset Kaggle
+        # Téléchargement du dataset Kaggle
+        download_dataset(dataset_name=self.dataset_name, destination_folder=self.main_folder)
 
         self.assertTrue(
             os.path.exists(self.main_folder),

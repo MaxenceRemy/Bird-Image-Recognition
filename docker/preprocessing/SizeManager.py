@@ -108,10 +108,10 @@ class SizeManager:
             df_birdName.loc[:, "ratio_size_close_to_1"] = 1 - df_birdName["ratio_size"] < 0.2
 
             # On compte combien d'images sont proches d'un ratio 1:1
-            true_count = df_birdName[df_birdName["ratio_size_close_to_1"] == True][
+            true_count = df_birdName[df_birdName["ratio_size_close_to_1"]][
                 "ratio_size_close_to_1"
             ].value_counts()
-            false_count = df_birdName[df_birdName["ratio_size_close_to_1"] == False][
+            false_count = df_birdName[not df_birdName["ratio_size_close_to_1"]][
                 "ratio_size_close_to_1"
             ].value_counts()
 

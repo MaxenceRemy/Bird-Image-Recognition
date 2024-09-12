@@ -4,14 +4,23 @@ import os
 
 
 class AlertSystem:
+    """
+    Gère le système d'envoi d'email
+    """
     def __init__(self):
-        self.from_email = os.getenv("ALERT_EMAIL")
-        self.password = os.getenv("EMAIL_PASSWORD")
+        """
+        Configure le système d'envoi d'email
+        """
+        self.from_email = os.getenv("SENDER_EMAIL")
+        self.password = os.getenv("SENDER_EMAIL_PASSWORD")
         self.to_email = os.getenv("RECIPIENT_EMAIL")
         self.smtp_server = "smtp.gmail.com"
         self.smtp_port = 465  # Port pour SSL
 
     def send_alert(self, subject, message):
+        """
+        Envoie un email
+        """
         msg = MIMEText(message)
         msg["Subject"] = subject
         msg["From"] = self.from_email

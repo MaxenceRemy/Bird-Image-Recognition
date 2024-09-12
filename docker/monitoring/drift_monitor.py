@@ -21,8 +21,9 @@ mlruns_path = os.path.join(volume_path, "mlruns")
 log_folder = os.path.join(volume_path, "logs")
 experiment_id = "157975935045122495"
 state_folder = os.path.join(volume_path, "containers_state")
-state_path = os.path.join(state_folder, "monitoring_state.txt")
+state_path = os.path.join(state_folder, "drift_monitor_state.txt")
 preprocessing_state_path = os.path.join(state_folder, "preprocessing_state.txt")
+training_state_path = os.path.join(state_folder, "training_state.txt")
 
 # On créer les dossiers si nécessaire
 os.makedirs(log_folder, exist_ok=True)
@@ -45,8 +46,8 @@ with open(state_path, "w") as file:
 
 class DriftMonitor:
     """
-    Classe chargée de détecter une dérive du modèle au fur et à mesure que de nouvelles
-    images sont ajoutées (la comparaison n'est pas faite avec les nouvelles classes)
+    Classe chargée de détecter une dérive du modèle au fur et à mesure que de nouvelles images sont ajoutées.
+    Les nouvelles classes sont exclues car elles ne peuvent pas être comparées.
     """
     def __init__(self):
         logging.info("Début d'exécution du script de drift monitoring.")
@@ -94,6 +95,14 @@ class DriftMonitor:
             confusion_df = pd.DataFrame(conf_matrix, index=class_labels, columns=class_labels)
             confusion_df = self.add_metrics(confusion_df)
 
+        except Exception as e:
+
+            logging.error(f"Erreur lors de la création de la matrice de confusion : {e}")
+            alert_system.send_alert(
+                subject="Erreur lors de la création de la matrice de confusion",
+                message=f"Erreur lors de la création de la matrice de confusion : {e}"
+            )
+
         finally:
 
             self.reinclude_unknown_classes()
@@ -132,20 +141,20 @@ class DriftMonitor:
         """
         df["Precision"] = df.apply(
             lambda row: df.loc[row.name, row.name] / df[row.name].sum()
-                if df[row.name].sum() != 0
-                else 0,
+            if df[row.name].sum() != 0
+            else 0,
             axis=1
         )
         df["Recall"] = df.apply(
             lambda row: df.loc[row.name, row.name] / df.loc[row.name].sum()
-                if df.loc[row.name].sum() != 0
-                else 0,
+            if df.loc[row.name].sum() != 0
+            else 0,
             axis=1
         )
         df["f1-score"] = df.apply(
             lambda row: (2 * row["Precision"] * row["Recall"]) / (row["Precision"] + row["Recall"])
-                if (row["Precision"] + row["Recall"]) != 0
-                else 0,
+            if (row["Precision"] + row["Recall"]) != 0
+            else 0,
             axis=1
         )
 
@@ -186,10 +195,11 @@ class DriftMonitor:
         logging.info("Envoie de l'email de rapport.")
 
         subject = f"Rapport de performance du modèle en production {self.run_id}."
-        best_f1_scores = self.get_best_f1_scores(df)
-        worst_f1_scores = self.get_worst_f1_scores(df)
-        evol_f1_scores = df[np.abs(df["diff f1-score"]) > 0.03]
+        best_f1_scores = self.get_best_f1_scores(df)  # 10 meilleurs f1-score
+        worst_f1_scores = self.get_worst_f1_scores(df)  # 10 pires f1-score
+        evol_f1_scores = df[np.abs(df["diff f1-score"]) > 0.03]  # Évolution de f1-score de plus de 3%
 
+        # On organise les informations en liste lisible (nom_de_classe : score_de_classe)
         best_scores_list = "\n".join(
             [f"{index} : {score}" for index, score in zip(best_f1_scores[0], best_f1_scores[1])])
         worst_scores_list = "\n".join(
@@ -213,34 +223,46 @@ class DriftMonitor:
 
 
 def main():
-
+    """
+    Gère la réévaluation du modèle avec les nouvelles données, compare aux anciennes métriques et
+    envoie un rapport par email.
+    """
     try:
-        # La fonction reste en attente tant que le container de preprocessing est actif
-        with open(preprocessing_state_path, "r") as file:
-            state = file.read()
-        while state != "0":
-            with open(preprocessing_state_path, "r") as file:
-                state = file.read()
-            time.sleep(5)
+        # La fonction reste en attente tant que les containers de preprocessing et training sont actifs
+        with open(preprocessing_state_path, "r") as preprocessing_file:
+            with open(training_state_path, "r") as training_file:
+                preprocessing_state = preprocessing_file.read()
+                training_state = training_file.read()
+                while preprocessing_state != "0" or training_state != "0":
+                    time.sleep(5)
+                    preprocessing_state = preprocessing_file.read()
+                    training_state = training_file.read()
 
         # On indique que le container est actif
         with open(state_path, "w") as file:
             file.write("1")
+
+        # Nouvelle évaluation, comparaison des scores et rapport par email
         drift_monitor = DriftMonitor()
         df = drift_monitor.make_current_model_confusion_matrix()
         df = drift_monitor.compare_confusion_matrix(df)
         drift_monitor.send_report_email(df)
+
         # On indique que le container est inactif
         with open(state_path, "w") as file:
             file.write("0")
+
     except Exception as e:
+
         logging.error(f"Erreur lors de l'exécution du suivi de dérive du modèle: {e}")
-        alert_system.send_alert(subject="Erreur lors du drift monitoring",
-                                message=f"Erreur lors de l'exécution du suivi de dérive du modèle: {e}")
+        alert_system.send_alert(
+            subject="Erreur lors du drift monitoring",
+            message=f"Erreur lors de l'exécution du suivi de dérive du modèle : {e}"
+        )
 
 
 if __name__ == "__main__":
-    schedule.every().day.at("21:32").do(main)
+    schedule.every().day.at("02:00").do(main)
     while True:
         schedule.run_pending()
         time.sleep(1)

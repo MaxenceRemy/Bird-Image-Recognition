@@ -194,9 +194,9 @@ async def predict(file_name: str):
     except Exception as e:
         logging.error(f"Un problème est survenu lors de l'inférence: {e}")
         alert_system.send_alert(
-                subject="Erreur lors de l'inférence",
-                message=f"Un problème est survenu lors de l'inférence: {e}",
-            )
+            subject="Erreur lors de l'inférence",
+            message=f"Un problème est survenu lors de l'inférence: {e}",
+        )
         raise HTTPException(
             status_code=500, detail=f"Un problème est survenu lors de l'inférence: {e}"
         )
@@ -220,9 +220,9 @@ async def switch_model(run_id: str = Body(...)):
     except Exception as e:
         logging.error(f"Le changement de modèle n'a pas fonctionné : {e}")
         alert_system.send_alert(
-                subject="Erreur lors de l'inférence",
-                message=f"Le changement de modèle n'a pas fonctionné : {e}",
-            )
+            subject="Erreur lors de l'inférence",
+            message=f"Le changement de modèle n'a pas fonctionné : {e}",
+        )
         raise HTTPException(
             status_code=500, detail=f"Le changement de modèle n'a pas fonctionné : {e}"
         )

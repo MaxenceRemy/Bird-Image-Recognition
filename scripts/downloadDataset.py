@@ -7,35 +7,19 @@ import shutil
 import json
 import glob
 from app.utils.logger import setup_logger
+from dotenv import load_dotenv
+load_dotenv()
+from kaggle.api.kaggle_api_extended import KaggleApi
+
 
 logger = setup_logger("download_dateset", "download_dateset.log")
 
 
-def download_dataset(
-    dataset_name: str = "gpiosenka/100-bird-species",
-    destination_folder: str = "./data",
-    kaggle_json_path: str = "./kaggle.json",
-):
+def download_dataset(dataset_name: str = "gpiosenka/100-bird-species", destination_folder: str = "./data"):
     """
     Télécharger la base de données d'oiseaux sur Kaggle et le placer dans le dossier passé en paramètre
     """
-    # region Gestion de l'environnement de l'API Kaggle
-    # Vérifier si le fichier kaggle.json existe
-    if not os.path.exists(kaggle_json_path):
-        logger.error(f"Le fichier kaggle.json n'a pas été trouvé à l'emplacement : {kaggle_json_path}")
-        raise FileNotFoundError(f"Le fichier kaggle.json n'a pas été trouvé à l'emplacement : {kaggle_json_path}")
-
-    # Lire le contenu du fichier kaggle.json
-    with open(kaggle_json_path, "r") as f:
-        kaggle_json = json.load(f)
-
-        # Configurer les variables d'environnement pour l'API Kaggle
-        os.environ["KAGGLE_USERNAME"] = kaggle_json["username"]
-        os.environ["KAGGLE_KEY"] = kaggle_json["key"]
-
     # Initialisation de l'API de Kaggle
-    from kaggle.api.kaggle_api_extended import KaggleApi
-
     kaggle_api = KaggleApi()
     kaggle_api.authenticate()
     # endregion

@@ -3,6 +3,10 @@ import pandas as pd
 import mlflow
 import mlflow.keras
 import numpy as np
+import logging
+import mlflow
+import shutil
+import json
 from sklearn.metrics import confusion_matrix
 from tensorflow.keras.applications import EfficientNetB0
 from tensorflow.keras.layers import Dropout, GlobalAveragePooling2D, Dense
@@ -11,11 +15,7 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras import Model
 from tensorflow.keras.optimizers import Adam
 from fastapi import FastAPI, HTTPException, BackgroundTasks
-import logging
-import mlflow
 from mlflow.tracking import MlflowClient
-import shutil
-import json
 from alert_system import AlertSystem
 
 # On lance le serveur FastAPI
@@ -31,6 +31,7 @@ state_folder = os.path.join(volume_path, "containers_state")
 dataset_folder = os.path.join(volume_path, "dataset_clean")
 state_path = os.path.join(state_folder, "training_state.txt")
 preprocessing_state_path = os.path.join(state_folder, "preprocessing_state.txt")
+drift_monitor_state_path = os.path.join(state_folder, "drift_monitor_state.txt")
 mlruns_path = os.path.join(volume_path, "mlruns")
 train_path = os.path.join(dataset_folder, "train")
 valid_path = os.path.join(dataset_folder, "valid")
@@ -40,7 +41,7 @@ test_path = os.path.join(dataset_folder, "test")
 os.makedirs(state_folder, exist_ok=True)
 os.makedirs(log_folder, exist_ok=True)
 
-# On déclare le nom de l'expérience MLFlow à récupérer
+# On déclare le nom de l'expérience MLflow à récupérer
 experiment_id = "157975935045122495"
 
 # On déclare l'état par défaut du container
@@ -55,7 +56,7 @@ logging.basicConfig(
     datefmt="%d/%m/%Y %I:%M:%S %p",
 )
 
-# On ajoute le dossier mlruns contenant un run complet si il n'existe pas dans le volume
+# On ajoute le dossier mlruns contenant un run complet s'il n'existe pas dans le volume
 if not os.path.exists(mlruns_path):
     shutil.copytree("./mlruns", mlruns_path)
     shutil.copy("./prod_model_id.txt", mlruns_path)
@@ -114,22 +115,22 @@ def add_metrics(df: pd.DataFrame) -> pd.DataFrame:
         # On calcule la précision basée sur les valeurs diagonales de la matrice
         df["Precision"] = df.apply(
             lambda row: df.loc[row.name, row.name] / df[row.name].sum()
-                if df[row.name].sum() != 0
-                else 0,
+            if df[row.name].sum() != 0
+            else 0,
             axis=1
         )
         # On calcule le recall basé sur les valeurs diagonales de la matrice
         df["Recall"] = df.apply(
             lambda row: df.loc[row.name, row.name] / df.loc[row.name].sum()
-                if df.loc[row.name].sum() != 0
-                else 0,
+            if df.loc[row.name].sum() != 0
+            else 0,
             axis=1
         )
         # On calcule le score f1 basée sur les valeurs diagonales de la matrice
         df["f1-score"] = df.apply(
             lambda row: (2 * row["Precision"] * row["Recall"]) / (row["Precision"] + row["Recall"])
-                if (row["Precision"] + row["Recall"]) != 0
-                else 0,
+            if (row["Precision"] + row["Recall"]) != 0
+            else 0,
             axis=1
         )
 
@@ -336,19 +337,28 @@ def read_root():
 @app.get("/train")
 async def train(background_tasks: BackgroundTasks):
     try:
-        # On vérifie que le preprocessing ou en entraînement n'est pas en cours
-        with open(preprocessing_state_path, "r") as file:
-            preprocessing_state = file.read()
-        with open(state_path, "r") as file:
-            state = file.read()
+        # On récupère les états des containers
+        with open(preprocessing_state_path, "r") as preprocessing_file:
+            preprocessing_state = preprocessing_file.read()
+
+        with open(drift_monitor_state_path, "r") as drift_monitor_file:
+            drift_monitor_state = drift_monitor_file.read()
+
+        with open(state_path, "r") as state_file:
+            state = state_file.read()
+
+        # On vérifie que le preprocessing, drift_monitoring ou en entraînement n'est pas en cours
         if (
-            preprocessing_state == "0" and state == "0" and len(os.listdir(dataset_folder)) > 1
+            preprocessing_state == "0"
+            and drift_monitor_state == "0"
+            and state == "0"
+            and len(os.listdir(dataset_folder)) > 1
         ):
             # On lance la tâche en arrière-plan pour immédiatement retourner une réponse
             background_tasks.add_task(train_model)
             return "Entraînement du modèle lancé, merci d'attendre le mail indiquant le succès de la tâche."
         else:
-            return "Un preprocessing ou en entraînement est en cours, merci de revenir plus tard."
+            return "Un preprocessing, révision de drift ou un entraînement est en cours, merci de revenir plus tard."
 
     except Exception as e:
         logging.error(f"Un problème est survenu lors de l''entraînement : {e}")

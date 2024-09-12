@@ -9,8 +9,6 @@ from system_monitor import SystemMonitor
 
 
 # region Configuration
-
-
 volume_path = 'volume_data'
 log_folder = os.path.join(volume_path, "logs")
 os.makedirs(log_folder, exist_ok=True)
@@ -19,7 +17,6 @@ logging.basicConfig(filename=os.path.join(log_folder, "monitoring.log"), level=l
                     datefmt='%d/%m/%Y %I:%M:%S %p')
 
 alert_system = AlertSystem()
-
 # endregion
 
 
@@ -37,10 +34,10 @@ class SystemMonitorThread(threading.Thread):
         """
         logging.info("Démarrage du thread de monitoring de performances systèmes.")
         while not self.stop_event.is_set():
-            metrics = self.monitor.get_metrics()
-            self.metrics_queue.put((time.time(), metrics))
-            self.log_metrics()
-            self.check_metrics_consistency(metrics)
+            metrics = self.monitor.get_metrics()  # Récupérer les métriques systèmes
+            self.metrics_queue.put((time.time(), metrics))  # Les ajouter dans la file
+            self.log_metrics()  # Les sauvegarder dans le csv de suivi des métriques
+            self.check_metrics_consistency(metrics)  # Vérifier qu'elles n'indiquent pas de surcharge du système
             time.sleep(5)
 
     def stop(self):
