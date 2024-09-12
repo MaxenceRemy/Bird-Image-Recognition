@@ -96,7 +96,8 @@ def start_cleaning(new_classes_to_track=[]):
     shutil.copytree(dataset_raw_path, dataset_clean_path, dirs_exist_ok=True)
 
     # On supprime tous les fichiers qui sont en double avec dataset_raw
-    os.remove(os.path.join(dataset_clean_path, "dataset_version.json"))
+    if os.path.exists(os.path.join(dataset_clean_path, "dataset_version.json")):
+        os.remove(os.path.join(dataset_clean_path, "dataset_version.json"))
     os.remove(os.path.join(dataset_clean_path, "birds.csv"))
     os.remove(os.path.join(dataset_clean_path, "birds_list.csv"))
 
