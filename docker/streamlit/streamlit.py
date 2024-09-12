@@ -11,7 +11,6 @@ st.set_page_config(page_title="Projet MLOps - Reconnaissance d'oiseaux", layout=
 USER_API_URL = os.getenv("USER_API_URL", "http://user_api:5000")
 ADMIN_API_URL = os.getenv("ADMIN_API_URL", "http://admin_api:5100")
 
-# Définition des variables de session utilisées durant la prédicition
 if 'specie' not in st.session_state:
     st.session_state.specie = 0
 
@@ -79,13 +78,63 @@ if page == "Présentation du projet":
         st.warning("Image de couverture non trouvée. \
                    Veuillez vous assurer que 'oiseau_cover.jpg' est présent dans le répertoire du script.")
 
-    st.write("""
-    Bienvenue dans notre projet MLOps de reconnaissance d'oiseaux.
-    - Application de reconnaissance d'oiseaux
-    - Suite d’un projet de cursus Data Scientist
-    - Problématiques environnementales
-    - Coopération et intérêt partagé
-    """)
+    # Création des onglets
+    tabs = st.tabs(["Introduction", "Contexte", "Solution", "Architecture", "Participation des utilisateurs"])
+
+    with tabs[0]:
+        st.header("Introduction et présentation")
+        st.write("""
+        Bienvenue dans notre projet MLOps de reconnaissance d'oiseaux. Ce projet innovant vise à :
+        - Identifier automatiquement les espèces d'oiseaux à partir d'images avec une haute précision
+        - Utiliser des techniques avancées de deep learning, notamment EfficientNetB0
+        - Appliquer les meilleures pratiques MLOps pour un déploiement robuste, scalable et maintenable
+        - Impliquer activement les utilisateurs dans l'amélioration continue du modèle
+
+        Notre solution combine l'intelligence artificielle de pointe, les principes MLOps, \
+                 et la participation communautaire pour créer un outil puissant et évolutif.
+        """)
+
+    with tabs[1]:
+        st.header("Contexte et problématique")
+        st.write("""
+        La biodiversité aviaire fait face à des défis sans précédent. Notre projet répond à ces enjeux en offrant :
+        - Une identification rapide et précise des espèces d'oiseaux
+        - Un outil participatif permettant aux utilisateurs de contribuer à l'enrichissement des données
+        - Une plateforme d'apprentissage continu, s'adaptant aux nouvelles espèces et variations
+        """)
+
+    with tabs[2]:
+        st.header("Solution")
+        st.write("""
+        Notre solution MLOps complète et participative comprend :
+        1. API Utilisateur pour soumettre des images et recevoir des prédictions
+        2. Système de contribution permettant aux utilisateurs d'enrichir le dataset
+        3. Processus automatisé d'intégration des nouvelles données et de mise à jour du modèle
+        4. Mécanisme de création de nouvelles classes pour les espèces non identifiées
+        5. Plateforme communautaire pour l'identification collaborative des espèces inconnues
+        """)
+
+    with tabs[3]:
+        st.header("Architecture")
+        st.write("""
+        Notre architecture basée sur Docker assure la portabilité de notre système et une importante scalabilité, \
+                 tout en facilitant la contribution des utilisateurs :
+        - Conteneurs spécialisés pour chaque composant du système
+        - Intégration fluide des contributions des utilisateurs dans le pipeline de données
+        - Mécanismes de validation et d'intégration des nouvelles espèces
+        - Système de stockage et de traitement des images non identifiées
+        """)
+
+    with tabs[4]:
+        st.header("Participation des utilisateurs")
+        st.write("""
+        Notre projet se distingue par son approche participative :
+        1. Les utilisateurs peuvent soumettre leurs propres photos d'oiseaux
+        2. Si l'espèce est reconnue, l'image enrichit le dataset existant
+        3. Pour les nouvelles espèces, une nouvelle classe est créée automatiquement
+        4. Les images d'espèces inconnues sont stockées pour une identification communautaire
+        5. Ce processus permet une amélioration continue du modèle et une extension de sa couverture
+        """)
 
 if page == "Technologies":
     st.title("Technologies")
@@ -118,7 +167,6 @@ if page == "Technologies":
                     convention PEP 8."
     ]
 
-    # On affiche les textes avec leur logos
     for i, text in enumerate(texts):
         col1, col2 = st.columns([1, 8])
 
@@ -132,7 +180,6 @@ if page == "Technologies":
 
 elif page == "Schémas":
 
-    # On permet de sélectionner le schéma à afficher
     choix_schema = st.radio(
         "Choisissez un schéma :",
         [
@@ -142,11 +189,10 @@ elif page == "Schémas":
         ]
     )
 
-
     if choix_schema == "Interaction utilisateur":
         st.markdown("<h1 style='text-align: center;'>Pipeline utilisateur</h1>", unsafe_allow_html=True)
 
-        # On cahrge et affiche l'image SVG avec possibilité de zoomer
+        # On charge et affiche l'image SVG avec la possibilité de zoomer
         try:
             with open("pipeline_user.svg", "r", encoding='utf-8') as svg_file:
                 svg_content = svg_file.read()
@@ -178,6 +224,7 @@ elif page == "Schémas":
         st.info("Utilisez la molette de la souris pour zoomer/dézoomer. \
                 Cliquez et faites glisser pour vous déplacer dans l'image.")
 
+        # Ajout d'explications détaillées sur la pipeline utilisateur
         st.write("""
         ### Explication détaillée de la pipeline utilisateur
 
@@ -243,6 +290,7 @@ elif page == "Schémas":
         st.info("Utilisez la molette de la souris pour zoomer/dézoomer. \
                 Cliquez et faites glisser pour vous déplacer dans l'image.")
 
+        # Ajout d'explications détaillées sur l'architecture
         st.write("""
         ### Explication détaillée de l'Architecture MLOps
 
@@ -261,7 +309,8 @@ elif page == "Schémas":
 
         3. **Production** :
         - Héberge le modèle optimisé pour des prédictions en temps réel sur les nouvelles images soumises.
-        - Se met à jour régulièrement pour intégrer les améliorations basées sur les contributions des utilisateurs.
+        - Peut être mis à jour régulièrement pour intégrer les améliorations basées sur les contributions des \
+                 utilisateurs.
 
         4. **API client** :
         - Fournit des endpoints pour la soumission d'images, la récupération des prédictions, \

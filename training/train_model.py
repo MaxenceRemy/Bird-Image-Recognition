@@ -90,14 +90,26 @@ def _train_model_internal(data_version, experiment_id):
             vertical_flip=True,
             zoom_range=0.2,
             shear_range=0.2,
-            fill_mode="nearest",
+            fill_mode="nearest"
         )
-        train_generator = train_datagen.flow_from_directory(train_path, target_size=(224, 224), batch_size=batch_size)
+
+        train_generator = train_datagen.flow_from_directory(
+            train_path,
+            target_size=(224, 224),
+            batch_size=batch_size,
+            shuffle=False
+        )
         valid_generator = ImageDataGenerator().flow_from_directory(
-            valid_path, target_size=(224, 224), batch_size=batch_size
+            valid_path,
+            target_size=(224, 224),
+            batch_size=batch_size,
+            shuffle=False            
         )
         test_generator = ImageDataGenerator().flow_from_directory(
-            test_path, target_size=(224, 224), batch_size=batch_size
+            test_path,
+            target_size=(224, 224),
+            batch_size=batch_size,
+            shuffle=False
         )
 
         num_classes = train_generator.num_classes

@@ -110,35 +110,35 @@ class TestAPI(unittest.TestCase):
         json_response = response.json()
         self.assertEqual(json_response["detail"], "Incorrect username or password")
 
-    # def test_06_predict(self):
-    #     """
-    #     Test de l'endpoint d'API "/predict"
-    #     Résultat attendu : Code de statut 200 et en retour le bon label et un score entre 0 et 1
-    #     """
-    #     logger.info(f"Test 06 : predict")
+    def test_06_predict(self):
+        """
+        Test de l'endpoint d'API "/predict"
+        Résultat attendu : Code de statut 200 et en retour le bon label et un score entre 0 et 1
+        """
+        logger.info(f"Test 06 : predict")
 
-    #     expected_label = "Toucan" # Le label attendu correspond au nom du répertoire contenu l'image envoyée
-    #     image_file = os.listdir(f"./data/valid/{expected_label}")[0] # On choisit une image à tester
-    #     image_path = f"./data/valid/{expected_label}/{image_file}" # On récupère le chemin de l'image
-    #     print("!!!!!!!!!!!!!!!!!!!!!!!!!!! Chemin de l'image ", image_path)
-    #     with open(image_path, "rb") as image_file:
+        expected_label = "Toucan" # Le label attendu correspond au nom du répertoire contenu l'image envoyée
+        image_file = os.listdir(f"./data/test/{expected_label}")[0] # On choisit une image à tester
+        image_path = f"./data/test/{expected_label}/{image_file}" # On récupère le chemin de l'image
 
-    #         files = {
-    #             "file": (f"{expected_label}_image.jpg", image_file, "image/jpg")
-    #         }
-    #         headers = {
-    #             "api-key": self.API_KEY,
-    #             "Authorization": f"Bearer {self.Token}"
-    #         }
+        with open(image_path, "rb") as image_file:
 
-    #         response = self.client.post("/predict", files=files, headers=headers)
+            files = {
+                "file": (f"{expected_label}_image.jpg", image_file, "image/jpg")
+            }
+            headers = {
+                "api-key": self.API_KEY,
+                "Authorization": f"Bearer {self.Token}"
+            }
 
-    #         self.assertEqual(response.status_code, 200)
-    #         response_json = response.json()
-    #         predicted_label = str(response_json["prediction"]).capitalize()
-    #         score = response_json["score"]
-    #         self.assertEqual(predicted_label, expected_label, f"Expected {expected_label} but got {predicted_label}")
-    #         self.assertTrue(0 <= score <= 1, f"Expected score between 0 and 1 but got {score}")
+            response = self.client.post("/predict", files=files, headers=headers)
+
+            self.assertEqual(response.status_code, 200)
+            response_json = response.json()
+            predicted_label = str(response_json["prediction"]).capitalize()
+            score = response_json["score"]
+            self.assertEqual(predicted_label, expected_label, f"Expected {expected_label} but got {predicted_label}")
+            self.assertTrue(0 <= score <= 1, f"Expected score between 0 and 1 but got {score}")
 
     def test_07_add_image(self):
         """

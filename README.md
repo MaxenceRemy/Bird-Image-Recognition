@@ -178,6 +178,7 @@ Le reste du code est considéré comme ancien et ne doit être exécuté qu'à d
 3. Lancez les conteneurs.
     - Si vous avez une carte graphique Nvidia : `docker-compose -f docker-compose-nvidia.yml up`.
     - Si vous n'avez pas de carte graphique Nvidia ou que vous n'êtes pas sûr : `docker-compose -f docker-compose.yml up`.
+
 **IMPORTANT** : lors de la création du volume, le dataset sera téléchargé et le preprocessing lancé. Les routes des API indiqueront qu'il faut attendre mais l'interface Streamlit peut indiquer des erreurs. Il suffit de patienter jusqu'à recevoir le mail de confirmation à la fin de l'opération.
 
 - Liste des applications web disponibles sur votre réseau local :
@@ -186,7 +187,9 @@ Le reste du code est considéré comme ancien et ne doit être exécuté qu'à d
     - Interface MLflow (port 5200) : `http://localhost:5200`
     - Interface Streamlit (port 5300) : `http://localhost:5300`
 
-Vous pourrez interagir avec les APIs en tant qu'administrateur avec les identifiants admin/admin ou en tant qu'utilisateur classique avec les identifiants user/user.
+- Vous pourrez interagir avec les APIs en tant que :
+    - **administrateur** avec les identifiants **admin/admin**.
+    - **utilisateur** avec les identifiants **user/user**.
 
 **Version sans docker (non recommandé) :**
 

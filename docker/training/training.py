@@ -112,21 +112,21 @@ def add_metrics(df: pd.DataFrame) -> pd.DataFrame:
     Ajout au DataFrame des métriques de precision, recall et f1-score
     """
     try:
-        # On calcule la précision basée sur les valeurs diagonales de la matrice
+        # On calcule la precision (VP/VP+FP) pour chaque classe et ajoute la colonne
         df["Precision"] = df.apply(
             lambda row: df.loc[row.name, row.name] / df[row.name].sum()
             if df[row.name].sum() != 0
             else 0,
             axis=1
         )
-        # On calcule le recall basé sur les valeurs diagonales de la matrice
+        # On calcule le recall (VP/VP+FN) pour chaque classe et ajoute la colonne
         df["Recall"] = df.apply(
             lambda row: df.loc[row.name, row.name] / df.loc[row.name].sum()
             if df.loc[row.name].sum() != 0
             else 0,
             axis=1
         )
-        # On calcule le score f1 basée sur les valeurs diagonales de la matrice
+        # On calcule le f1-score ((2*Rec*Pre)/(Rec+Pre)) pour chaque classe et ajoute la colonne
         df["f1-score"] = df.apply(
             lambda row: (2 * row["Precision"] * row["Recall"]) / (row["Precision"] + row["Recall"])
             if (row["Precision"] + row["Recall"]) != 0
