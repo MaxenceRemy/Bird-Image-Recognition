@@ -118,12 +118,14 @@ def add_metrics(df: pd.DataFrame) -> pd.DataFrame:
                 else 0,
             axis=1
         )
+        # On calcule le recall basé sur les valeurs diagonales de la matrice
         df["Recall"] = df.apply(
             lambda row: df.loc[row.name, row.name] / df.loc[row.name].sum()
                 if df.loc[row.name].sum() != 0
                 else 0,
             axis=1
         )
+        # On calcule le score f1 basée sur les valeurs diagonales de la matrice
         df["f1-score"] = df.apply(
             lambda row: (2 * row["Precision"] * row["Recall"]) / (row["Precision"] + row["Recall"])
                 if (row["Precision"] + row["Recall"]) != 0
@@ -224,7 +226,7 @@ def train_model():
                 valid_path, target_size=(224, 224), batch_size=batch_size
             )
             test_generator = ImageDataGenerator().flow_from_directory(
-                test_path, target_size=(224, 224), batch_size=batch_size
+                test_path, target_size=(224, 224), batch_size=batch_size, shuffle=False
             )
 
             # Récupération du nombre de classes et leurs indexs

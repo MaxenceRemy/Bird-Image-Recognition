@@ -72,7 +72,7 @@ class DriftMonitor:
             test_generator = datagen.flow_from_directory(
                 test_set_path,
                 target_size=self.img_size,
-                batch_size=32,
+                batch_size=16,
                 class_mode="categorical",
                 shuffle=False
             )

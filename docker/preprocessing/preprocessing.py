@@ -162,10 +162,7 @@ def auto_update_dataset(dataset_name, destination, first_launch=False):
     # On télécharge le fichier zip du dataset via l'API de Kaggle dans un dossier temporaire
     temp_destination = os.path.join(destination, "temp")
     kaggle_api.dataset_download_files(dataset_name, path=temp_destination, unzip=True)
-    # On actualise la version du dataset local
-    with open(dataset_version_path, "w") as file:
-        json.dump(dataset_info, file, indent=4)
-
+    
     # On supprime ce dont on a pas besoin
     os.remove(os.path.join(temp_destination, "EfficientNetB0-525-(224 X 224)- 98.97.h5"))
 
@@ -187,6 +184,19 @@ def auto_update_dataset(dataset_name, destination, first_launch=False):
                                 classes, le preprocessing se déclenchera automatiquement
                                 et un autre mail sera envoyé.""",
         )
+
+    # Lors du premier lancement, on rajoute ce fichier à la fin du preprocessing
+    # pour permettre de relancer le processus complet en cas de crash
+    # car c'est la présence de ce fichier qui indique la nécessité 
+    # de télécharger le dataset la première fois
+    if first_launch == False:
+        # On actualise la version du dataset local
+        with open(dataset_version_path, "w") as file:
+            json.dump(dataset_info, file, indent=4)
+
+    else:
+        # On donnes les informations pour enregistrer le fichier
+        return dataset_info
 
 
 def refresh_images_count(base_dict, updated_dict, dict_class_key, dict_count_key):
@@ -210,7 +220,7 @@ try:
             file.write("2")
         logging.info("Téléchargement du dataset car aucun n'est présent...")
         # On télécharge le dataset
-        auto_update_dataset(dataset_name="gpiosenka/100-bird-species", destination=dataset_raw_path, first_launch=True)
+        dataset_info = auto_update_dataset(dataset_name="gpiosenka/100-bird-species", destination=dataset_raw_path, first_launch=True)
         # On lance un premier preprocessing
         logging.info("Lancement du premier preprocessing...")
         start_cleaning()
@@ -236,6 +246,10 @@ try:
         # On indique que ce container est inactif
         with open(state_path, "w") as file:
             file.write("0")
+
+        # On actualise la version du dataset local
+        with open(dataset_version_path, "w") as file:
+            json.dump(dataset_info, file, indent=4)
 
         logging.info("Le dataset de base a bien été téléchargé et le preprocessing est terminé !")
         alert_system.send_alert(

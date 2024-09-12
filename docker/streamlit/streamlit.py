@@ -11,6 +11,7 @@ st.set_page_config(page_title="Projet MLOps - Reconnaissance d'oiseaux", layout=
 USER_API_URL = os.getenv("USER_API_URL", "http://user_api:5000")
 ADMIN_API_URL = os.getenv("ADMIN_API_URL", "http://admin_api:5100")
 
+# Définition des variables de session utilisées durant la prédicition
 if 'specie' not in st.session_state:
     st.session_state.specie = 0
 
@@ -43,7 +44,7 @@ with st.sidebar:
             "Présentation du projet",
             "Technologies",
             "Schémas",
-            "MLflow",
+            "Résultats de l'entraînement",
             "Interface utilisateur (APIs)",
             "Conclusion"
         ]
@@ -77,64 +78,6 @@ if page == "Présentation du projet":
     except FileNotFoundError:
         st.warning("Image de couverture non trouvée. \
                    Veuillez vous assurer que 'oiseau_cover.jpg' est présent dans le répertoire du script.")
-
-    # # Création des onglets
-    # tabs = st.tabs(["Introduction", "Contexte", "Solution", "Architecture", "Participation des utilisateurs"])
-
-    # with tabs[0]:
-    #     st.header("Introduction et présentation")
-    #     st.write("""
-    #     Bienvenue dans notre projet MLOps de reconnaissance d'oiseaux. Ce projet innovant vise à :
-    #     - Identifier automatiquement les espèces d'oiseaux à partir d'images avec une haute précision
-    #     - Utiliser des techniques avancées de deep learning, notamment EfficientNetB0
-    #     - Appliquer les meilleures pratiques MLOps pour un déploiement robuste, scalable et maintenable
-    #     - Impliquer activement les utilisateurs dans l'amélioration continue du modèle
-
-    #     Notre solution combine l'intelligence artificielle de pointe, les principes MLOps, \
-    #              et la participation communautaire pour créer un outil puissant et évolutif.
-    #     """)
-
-    # with tabs[1]:
-    #     st.header("Contexte et problématique")
-    #     st.write("""
-    #     La biodiversité aviaire fait face à des défis sans précédent. Notre projet répond à ces enjeux en offrant :
-    #     - Une identification rapide et précise des espèces d'oiseaux
-    #     - Un outil participatif permettant aux utilisateurs de contribuer à l'enrichissement des données
-    #     - Une plateforme d'apprentissage continu, s'adaptant aux nouvelles espèces et variations
-    #     """)
-
-    # with tabs[2]:
-    #     st.header("Solution")
-    #     st.write("""
-    #     Notre solution MLOps complète et participative comprend :
-    #     1. API Utilisateur pour soumettre des images et recevoir des prédictions
-    #     2. Système de contribution permettant aux utilisateurs d'enrichir le dataset
-    #     3. Processus automatisé d'intégration des nouvelles données et de mise à jour du modèle
-    #     4. Mécanisme de création de nouvelles classes pour les espèces non identifiées
-    #     5. Plateforme communautaire pour l'identification collaborative des espèces inconnues
-    #     """)
-
-    # with tabs[3]:
-    #     st.header("Architecture")
-    #     st.write("""
-    #     Notre architecture basée sur Docker assure la portabilité de notre système et une importante scalabilité, \
-    #              tout en facilitant la contribution des utilisateurs :
-    #     - Conteneurs spécialisés pour chaque composant du système
-    #     - Intégration fluide des contributions des utilisateurs dans le pipeline de données
-    #     - Mécanismes de validation et d'intégration des nouvelles espèces
-    #     - Système de stockage et de traitement des images non identifiées
-    #     """)
-
-    # with tabs[4]:
-    #     st.header("Participation des utilisateurs")
-    #     st.write("""
-    #     Notre projet se distingue par son approche participative :
-    #     1. Les utilisateurs peuvent soumettre leurs propres photos d'oiseaux
-    #     2. Si l'espèce est reconnue, l'image enrichit le dataset existant
-    #     3. Pour les nouvelles espèces, une nouvelle classe est créée automatiquement
-    #     4. Les images d'espèces inconnues sont stockées pour une identification communautaire
-    #     5. Ce processus permet une amélioration continue du modèle et une extension de sa couverture
-    #     """)
 
     st.write("""
     Bienvenue dans notre projet MLOps de reconnaissance d'oiseaux.
@@ -175,6 +118,7 @@ if page == "Technologies":
                     convention PEP 8."
     ]
 
+    # On affiche les textes avec leur logos
     for i, text in enumerate(texts):
         col1, col2 = st.columns([1, 8])
 
@@ -188,6 +132,7 @@ if page == "Technologies":
 
 elif page == "Schémas":
 
+    # On permet de sélectionner le schéma à afficher
     choix_schema = st.radio(
         "Choisissez un schéma :",
         [
@@ -197,10 +142,11 @@ elif page == "Schémas":
         ]
     )
 
+
     if choix_schema == "Interaction utilisateur":
         st.markdown("<h1 style='text-align: center;'>Pipeline utilisateur</h1>", unsafe_allow_html=True)
 
-        # Charger et afficher l'image SVG avec zoom
+        # On cahrge et affiche l'image SVG avec possibilité de zoomer
         try:
             with open("pipeline_user.svg", "r", encoding='utf-8') as svg_file:
                 svg_content = svg_file.read()
@@ -209,13 +155,7 @@ elif page == "Schémas":
             st.error("Le fichier 'pipeline_user.svg' n'a pas été trouvé. \
                      Assurez-vous qu'il est présent dans le répertoire du script.")
 
-        # Corriger les symboles
-        svg_content = svg_content.replace('DonnÃ©es', 'Données')
-        svg_content = svg_content.replace('ModÃ¨les', 'Modèles')
-        svg_content = svg_content.replace('traitÃ©es', 'traitées')
-        svg_content = svg_content.replace('archivÃ©', 'archivé')
-
-        # Utiliser un composant HTML personnalisé pour le zoom
+        # On utilise un composant HTML personnalisé pour le zoom
         components.html(f"""
         <div id="svg-container" style="width: 100%; height: 600px; border: 1px solid #ddd; overflow: hidden;">
             {svg_content}
@@ -238,7 +178,6 @@ elif page == "Schémas":
         st.info("Utilisez la molette de la souris pour zoomer/dézoomer. \
                 Cliquez et faites glisser pour vous déplacer dans l'image.")
 
-        # Ajout d'explications détaillées sur la pipeline utilisateur
         st.write("""
         ### Explication détaillée de la pipeline utilisateur
 
@@ -266,7 +205,7 @@ elif page == "Schémas":
     elif choix_schema == "Architecture":
         st.markdown("<h1 style='text-align: center;'>Architecture du projet</h1>", unsafe_allow_html=True)
 
-        # Charger et afficher l'image SVG avec zoom
+        # On charge et affiche l'image SVG avec zoom
         try:
             with open("architecture.svg", "r", encoding='utf-8') as svg_file:
                 svg_content = svg_file.read()
@@ -275,13 +214,13 @@ elif page == "Schémas":
             st.error("Le fichier 'architecture.svg' n'a pas été trouvé. \
                      Assurez-vous qu'il est présent dans le répertoire du script.")
 
-        # Corriger les symboles
+        # On corrige les symboles
         svg_content = svg_content.replace('DonnÃ©es', 'Données')
         svg_content = svg_content.replace('ModÃ¨les', 'Modèles')
         svg_content = svg_content.replace('traitÃ©es', 'traitées')
         svg_content = svg_content.replace('archivÃ©', 'archivé')
 
-        # Utiliser un composant HTML personnalisé pour le zoom
+        # On utilise un composant HTML personnalisé pour le zoom
         components.html(f"""
         <div id="svg-container" style="width: 100%; height: 600px; border: 1px solid #ddd; overflow: hidden;">
             {svg_content}
@@ -304,7 +243,6 @@ elif page == "Schémas":
         st.info("Utilisez la molette de la souris pour zoomer/dézoomer. \
                 Cliquez et faites glisser pour vous déplacer dans l'image.")
 
-        # Ajout d'explications détaillées sur l'architecture
         st.write("""
         ### Explication détaillée de l'Architecture MLOps
 
@@ -355,7 +293,7 @@ elif page == "Schémas":
     elif choix_schema == "Pipeline":
         st.markdown("<h1 style='text-align: center;'>Pipeline MLOPS</h1>", unsafe_allow_html=True)
 
-        # Charger et afficher l'image SVG avec zoom
+        # On charge et on affiche l'image SVG avec zoom
         try:
             with open("pipeline_mlops.svg", "r", encoding='utf-8') as svg_file:
                 svg_content = svg_file.read()
@@ -364,13 +302,7 @@ elif page == "Schémas":
             st.error("Le fichier 'pipeline_mlops.svg' n'a pas été trouvé. \
                      Assurez-vous qu'il est présent dans le répertoire du script.")
 
-        # Corriger les symboles
-        svg_content = svg_content.replace('DonnÃ©es', 'Données')
-        svg_content = svg_content.replace('ModÃ¨les', 'Modèles')
-        svg_content = svg_content.replace('traitÃ©es', 'traitées')
-        svg_content = svg_content.replace('archivÃ©', 'archivé')
-
-        # Utiliser un composant HTML personnalisé pour le zoom
+        # On utilise un composant HTML personnalisé pour le zoom
         components.html(f"""
         <div id="svg-container" style="width: 100%; height: 600px; border: 1px solid #ddd; overflow: hidden;">
             {svg_content}
@@ -468,29 +400,46 @@ elif page == "Schémas":
                  et évite des erreurs ou corruption de données.
         """)
 
-elif page == "MLflow":
-    st.title("MLflow Dashboard")
+elif page == "Résultats de l'entraînement":
+    st.title("Résultats et comparaison des modèles")
 
+    # On affiche cette page seulement si l'utilisateur est connecté
     if 'admin_token' in st.session_state:
         try:
             headers = {
                 "Authorization": f"Bearer {st.session_state.admin_token}",
                 "api-key": "abcd1234"
             }
-            response = requests.get(f"{ADMIN_API_URL}/results", headers=headers, timeout=10)
-            if response.status_code == 200:
-                results = response.json()
-                st.write("### Résultats de l'entraînement le plus récent")
-                st.json(results)
 
-                # Ajouter un lien vers l'interface MLflow
-                st.markdown("[Ouvrir l'interface MLflow complète](http://localhost:5200)")
-            else:
-                st.error("Impossible d'obtenir les résultats de l'entraînement")
-                st.error(f"Code d'état : {response.status_code}")
-                st.error(f"Détails de l'erreur : {response.text}")
-        except requests.RequestException as e:
-            st.error(f"Impossible de communiquer avec l'API admin. Erreur : {str(e)}")
+            # On récupère les résultats via l'API
+            response = requests.get(f"{ADMIN_API_URL}/results", headers=headers, timeout=10)
+            results = response.json()
+
+            # On mets en page le JSON
+            col1, col2 = st.columns(2)
+
+            with col1:
+                st.subheader("Dernier modèle entraîné :")
+                st.markdown(f"""<p style="font-size: 18px; display: inline;">Identifiant du run MLFlow : </p> <p style="font-size: 18px; color: #0da0e4; display: inline;"> {results['latest_run_id']}</p>""", unsafe_allow_html = True)
+                st.markdown(f"""<p style="font-size: 18px; display: inline;">Précision (sur le set de validation) : </p> <p style="font-size: 18px; color: #0da0e4; display: inline;"> {results['latest_run_val_accuracy']}</p>""", unsafe_allow_html = True)
+                st.markdown(f"""<p style="font-size: 18px; display: inline;">Perte (sur le set de validation) : </p> <p style="font-size: 18px; color: #0da0e4; display: inline;"> {results['latest_run_val_loss']}</p>""", unsafe_allow_html = True)
+                st.markdown(f"""<b style="font-size: 18px; display: inline;"> </br> Les 10 pires classes : </b>""", unsafe_allow_html = True)
+                for classe, score in results['latest_run_worst_f1_scores'].items():
+                    st.write(f"""<p style="font-size: 18px; display: inline;">{classe}</p> : <p style="font-size: 18px; color: #0da0e4; display: inline;">{score} </p>""", unsafe_allow_html = True)
+            with col2:
+                st.subheader("Modèle actuellement utilisé :")
+                st.markdown(f"""<p style="font-size: 18px; display: inline;">Identifiant du run MLFlow : </p> <p style="font-size: 18px; color: #0da0e4; display: inline;"> {results['main_model_run_id']}</p>""", unsafe_allow_html = True)
+                st.markdown(f"""<p style="font-size: 18px; display: inline;">Précision (sur le set de validation) : </p> <p style="font-size: 18px; color: #0da0e4; display: inline;"> {results['main_model_val_accuracy']}</p>""", unsafe_allow_html = True)
+                st.markdown(f"""<p style="font-size: 18px; display: inline;">Perte (sur le set de validation) : </p> <p style="font-size: 18px; color: #0da0e4; display: inline;"> {results['main_model_val_loss']}</p>""", unsafe_allow_html = True)
+                st.markdown(f"""<b style="font-size: 18px; display: inline;"> </br> Les 10 pires classes : </b>""", unsafe_allow_html = True)
+                for classe, score in results['main_model_worst_f1_scores'].items():
+                    st.write(f"""<p style="font-size: 18px; display: inline;">{classe}</p> : <p style="font-size: 18px; color: #0da0e4; display: inline;">{score} </p>""", unsafe_allow_html = True)
+
+            # On ajoute un lien vers l'interface MLflow
+            st.markdown("</br>[Accéder à plus de détails sur l'interface MLFlow](http://localhost:5200)", unsafe_allow_html = True)
+
+        except Exception as e:
+            st.error(f"Impossible de communiquer avec l'API administrateur : {str(e)}")
             st.info("Vérifiez que tous les conteneurs sont en cours d'exécution \
                     et que les ports sont correctement configurés.")
     else:
@@ -500,37 +449,42 @@ elif page == "MLflow":
 elif page == "Interface utilisateur (APIs)":
     st.title("Interface utilisateur (APIs)")
 
-    # Sélection de l'API
+    # Permet de choisir à quelle API se connecter
     api_choice = st.radio("Choisissez une API", ("Utilisateur", "Admin"))
 
     if api_choice == "Utilisateur":
         st.subheader("API Utilisateur")
 
-        # Authentification
+        # Système d'authentification
         username = st.text_input("Nom d'utilisateur")
         password = st.text_input("Mot de passe", type="password")
         if st.button("Se connecter"):
             try:
+                # On vérifie les indentifiants auprès de l'API
                 response = requests.post(f"{USER_API_URL}/token",
                                          data={"username": username, "password": password})
                 if response.status_code == 200:
                     st.success(f"Connecté en tant que {username}")
                     st.session_state.user_token = response.json()["access_token"]
                 else:
-                    st.error("Échec de l'authentification")
-            except requests.RequestException:
-                st.error("Impossible de se connecter à l'API. \
+                    st.error("Échec de l'authentification.")
+            except Exception as e:
+                st.error("Impossible de se connecter à l'API utilisateur. \
                          Assurez-vous que les conteneurs Docker sont en cours d'exécution.")
 
+        # Permet d'afficher un message de succès après la contribution de l'utilisateur
+        # lors d'une prédiction au moment du rechargement de la page
         if st.session_state.success:
             st.toast("Merci pour votre précieuse contribution !")
             st.session_state.success = False
 
-        # Prédiction
+        # Système de prédiction si l'utilisateur ou l'administrateur est bien connecté
         if 'user_token' in st.session_state:
             uploaded_file = st.file_uploader("Choisissez une image d'oiseau", type=["jpg", "png"])
             col1, col2, col3, col4 = st.columns([0.2, 0.2, 0.2, 0.22], vertical_alignment="bottom")
+            # Si une image est chargée, on lance la prédiction
             if uploaded_file is not None:
+                # On ouvre l'image pour l'afficher
                 image = Image.open(uploaded_file)
                 with col1:
                     st.image(image, caption="Image téléchargée")
@@ -541,105 +495,136 @@ elif page == "Interface utilisateur (APIs)":
                         "Authorization": f"Bearer {st.session_state.user_token}",
                         "api-key": "abcd1234"
                     }
+                    # On fait une requête vers l'API
                     response = requests.post(f"{USER_API_URL}/predict", files=files, headers=headers)
-                    if response.status_code == 200:
-                        prediction = response.json()
-                        with col2:
-                            response = requests.get(f"{USER_API_URL}/get_class_image",
-                                                    params={'classe': prediction['predictions'][0]},
-                                                    headers=headers)
-                            st.image(response.content)
-                            st.markdown(f"""<p style="font-size: 20px;"> {prediction['predictions'][0]} </p>""",
-                                        unsafe_allow_html=True)
-                            st.markdown(f"""<p style="color: #079e20; font-size: 20px;"> \
-                                        {str(round(prediction['scores'][0] * 100, 2)) + "%"} </p>""",
-                                        unsafe_allow_html=True)
-                        with col3:
-                            response = requests.get(f"{USER_API_URL}/get_class_image",
-                                                    params={'classe': prediction['predictions'][1]},
-                                                    headers=headers)
-                            st.image(response.content)
-                            st.markdown(f"""<p style="font-size: 20px;"> {prediction['predictions'][1]} </p>""",
-                                        unsafe_allow_html=True)
-                            st.markdown(f"""<p style="color: #d1ae29; font-size: 20px;"> \
-                                        {str(round(prediction['scores'][1] * 100, 2)) + "%"} </p>""",
-                                        unsafe_allow_html=True)
-                        with col4:
-                            response = requests.get(f"{USER_API_URL}/get_class_image",
-                                                    params={'classe': prediction['predictions'][2]},
-                                                    headers=headers)
-                            st.image(response.content)
-                            st.markdown(f"""<p style="font-size: 20px;"> {prediction['predictions'][2]} </p>""",
-                                        unsafe_allow_html=True)
-                            st.markdown(f"""<p style="color: #b26a19; font-size: 20px;"> \
-                                        {str(round(prediction['scores'][2] * 100, 2)) + "%"} </p>""",
-                                        unsafe_allow_html=True)
+                    
+                    prediction = response.json()
+                except Exception as e:
+                    st.error(f"Impossible de communiquer avec l'API d'inférence : {response.json()}")
 
-                        st.subheader("Une des prédictions est-elle correcte ?")
-                        col1, col2, col3 = st.columns([0.1, 0.4, 0.5])
-                        with col1:
-                            if st.button("Oui"):
-                                st.session_state.specie = 1
-                        with col2:
-                            if st.button("Non, mais je connais l'espèce correcte"):
-                                st.session_state.specie = 2
+                try:
+                    # On affiche dans les 3 colonnes restantes les prédictions ainsi que leurs
+                    # images associées
+                    with col2:
+                        # Permet de récupérer l'image associée à la classe prédite
+                        response = requests.get(f"{USER_API_URL}/get_class_image",
+                                                params={'classe': prediction['predictions'][0]},
+                                                headers=headers)
+                        st.image(response.content)
+                        st.markdown(f"""<p style="font-size: 20px;"> {prediction['predictions'][0]} </p>""",
+                                    unsafe_allow_html=True)
+                        st.markdown(f"""<p style="color: #079e20; font-size: 20px;"> \
+                                    {str(round(prediction['scores'][0] * 100, 2)) + "%"} </p>""",
+                                    unsafe_allow_html=True)
+                    with col3:
+                        # Permet de récupérer l'image associée à la classe prédite
+                        response = requests.get(f"{USER_API_URL}/get_class_image",
+                                                params={'classe': prediction['predictions'][1]},
+                                                headers=headers)
+                        st.image(response.content)
+                        st.markdown(f"""<p style="font-size: 20px;"> {prediction['predictions'][1]} </p>""",
+                                    unsafe_allow_html=True)
+                        st.markdown(f"""<p style="color: #d1ae29; font-size: 20px;"> \
+                                    {str(round(prediction['scores'][1] * 100, 2)) + "%"} </p>""",
+                                    unsafe_allow_html=True)
+                    with col4:
+                        # Permet de récupérer l'image associée à la classe prédite
+                        response = requests.get(f"{USER_API_URL}/get_class_image",
+                                                params={'classe': prediction['predictions'][2]},
+                                                headers=headers)
+                        st.image(response.content)
+                        st.markdown(f"""<p style="font-size: 20px;"> {prediction['predictions'][2]} </p>""",
+                                    unsafe_allow_html=True)
+                        st.markdown(f"""<p style="color: #b26a19; font-size: 20px;"> \
+                                    {str(round(prediction['scores'][2] * 100, 2)) + "%"} </p>""",
+                                    unsafe_allow_html=True)
+                
+                    # On affiche les boutons pour récupérer l'avis de l'utilisateur
+                    st.subheader("Une des prédictions est-elle correcte ?")
+                    col1, col2, col3 = st.columns([0.1, 0.4, 0.5])
+                    with col1:
+                        if st.button("Oui"):
+                            st.session_state.specie = 1
+                    with col2:
+                        if st.button("Non, mais je connais l'espèce correcte"):
+                            st.session_state.specie = 2
 
-                        with col3:
-                            if st.button("Je ne suis pas sûr"):
-                                data = {"species": "NA", "image_name": prediction['filename'], "is_unknown": True}
-                                response = requests.post(f"{ADMIN_API_URL}/add_image", headers=headers, data=data)
-                                st.session_state.success = True
-                                st.session_state.specie = 0
-                                st.rerun()
-
-                        if st.session_state.specie == 1 and not st.session_state.success:
-                            st.session_state.selected_specie = st.selectbox(
-                                "Sélectionnez l'espèce correcte :",
-                                ["Sélectionnez une espèce..."] + prediction['predictions']
-                            )
-                        if st.session_state.specie == 2 and not st.session_state.success:
-                            response = requests.get(f"{USER_API_URL}/get_species", headers=headers)
-                            species_list = response.json()
-                            st.session_state.selected_specie = st.selectbox(
-                                "Sélectionnez l'espèce correcte :",
-                                ["Sélectionnez une espèce..."] + species_list['species']
-                            )
-                        if st.session_state.selected_specie != "Sélectionnez une espèce...":
-                            data = {"species": st.session_state.selected_specie,
-                                    "image_name": prediction['filename'],
-                                    "is_unknown": False
-                                    }
+                    with col3:
+                        # Si l'utilisateur n'est pas sûr, on demande à l'API d'ajouter l'image
+                        # dans les classes inconnues
+                        if st.button("Je ne suis pas sûr"):
+                            data = {"species": "NA", "image_name": prediction['filename'], "is_unknown": True}
+                            # On demande à l'API d'ajouter l'image
                             response = requests.post(f"{ADMIN_API_URL}/add_image", headers=headers, data=data)
                             st.session_state.success = True
                             st.session_state.specie = 0
-                            st.session_state.selected_specie = "Sélectionnez une espèce..."
                             st.rerun()
-                    else:
-                        st.error("Échec de la prédiction")
+
                 except Exception as e:
-                    st.error(f"Impossible de communiquer avec l'API d'inférence : {e}")
+                    st.error(f"Impossible de récupérer les images associées aux classes : {response.json()}")
+
+
+
+                try:
+                    # Si l'utilisateur dit Oui, on affiche la liste des espèces
+                    if st.session_state.specie == 1 and not st.session_state.success:
+                        st.session_state.selected_specie = st.selectbox(
+                            "Sélectionnez l'espèce correcte :",
+                            ["Sélectionnez une espèce..."] + prediction['predictions']
+                        )
+
+                    # Si l'utilisateur connaît la bonne espèce, on affiche la liste des 11 000 espèces
+                    if st.session_state.specie == 2 and not st.session_state.success:
+                        # On demande à l'API d'ajouter l'image
+                        response = requests.get(f"{USER_API_URL}/get_species", headers=headers)
+                        species_list = response.json()
+                        st.session_state.selected_specie = st.selectbox(
+                            "Sélectionnez l'espèce correcte :",
+                            ["Sélectionnez une espèce..."] + species_list['species']
+                        )
+
+                except Exception as e:
+                    st.error(f"Impossible de récupérer la liste des espèces...")
+                
+                # Si l'utilisateur a fait sa sélection, on demande à l'API d'ajouter l'image
+                if st.session_state.selected_specie != "Sélectionnez une espèce...":
+                    data = {"species": st.session_state.selected_specie,
+                            "image_name": prediction['filename'],
+                            "is_unknown": False
+                            }
+                    response = requests.post(f"{ADMIN_API_URL}/add_image", headers=headers, data=data)
+                    st.session_state.success = True
+                    st.session_state.specie = 0
+                    st.session_state.selected_specie = "Sélectionnez une espèce..."
+                    st.rerun()
+                    
+               
 
     else:
         st.subheader("API Admin")
 
-        # Authentification
+        # Système d'authentification
         admin_username = st.text_input("Nom d'administrateur")
         admin_password = st.text_input("Mot de passe administrateur", type="password")
+
         if st.button("Se connecter (Admin)"):
             try:
+                # On vérifie les indentifiants auprès de l'API
                 response = requests.post(f"{ADMIN_API_URL}/token",
                                          data={"username": admin_username, "password": admin_password})
                 if response.status_code == 200:
-                    st.success(f"Connecté en tant qu'administrateur {admin_username}")
+                    st.info(f"Connecté en tant qu'administrateur avec l'utilisateur : {admin_username}")
                     st.session_state.admin_token = response.json()["access_token"]
                 else:
-                    st.error("Échec de l'authentification admin")
-            except requests.RequestException:
-                st.error("Impossible de se connecter à l'API admin. \
+                    st.error(f"Impossible de se connecter à l'API administrateur, erreur {response.status_code}")
+            except Exception as e:
+                st.error("Impossible de se connecter à l'API administrateur. \
                          Assurez-vous que les conteneurs Docker sont en cours d'exécution.")
 
+        # Si l'utilisateur est bien connecté, on affiche l'interface
         if 'admin_token' in st.session_state:
-            # Ajout d'un utilisateur
+
+            # Permet d'ajouter un utilisateur
             st.subheader("Ajouter un utilisateur")
             new_username = st.text_input("Nouveau nom d'utilisateur")
             new_password = st.text_input("Nouveau mot de passe", type="password")
@@ -651,13 +636,13 @@ elif page == "Interface utilisateur (APIs)":
                         "api-key": "abcd1234"
                     }
                     data = {"new_username": new_username, "user_password": new_password, "is_admin": is_admin}
+                    # On demande à l'API d'ajouter l'utilisateur
                     response = requests.post(f"{ADMIN_API_URL}/add_user", headers=headers, data=data)
-                    if response.status_code == 200:
-                        st.success(f"Utilisateur {new_username} ajouté avec succès")
-                    else:
-                        st.error("Échec de l'ajout de l'utilisateur")
-                except requests.RequestException:
-                    st.error("Impossible de communiquer avec l'API admin")
+
+                    st.info(response.json())
+                    
+                except Exception as e:
+                    st.error(f"Impossible de communiquer avec l'API administrateur : {e}")
 
             st.write("---")
 
@@ -668,29 +653,13 @@ elif page == "Interface utilisateur (APIs)":
                         "Authorization": f"Bearer {st.session_state.admin_token}",
                         "api-key": "abcd1234"
                     }
+                    # On demande à l'API de lancer l'entraînement
                     response = requests.get(f"{ADMIN_API_URL}/train", headers=headers)
-                    if response.status_code == 200:
-                        st.info(response.json())
-                    else:
-                        st.error("Échec du lancement de l'entraînement")
-                except requests.RequestException:
-                    st.error("Impossible de communiquer avec l'API d'entraînement")
 
-            # # Afficher les résultats
-            # if st.button("Afficher les résultats de l'entraînement"):
-            #     try:
-            #         headers = {
-            #             "Authorization": f"Bearer {st.session_state.admin_token}",
-            #             "api-key": "abcd1234"
-            #         }
-            #         response = requests.get(f"{ADMIN_API_URL}/results", headers=headers)
-            #         if response.status_code == 200:
-            #             results = response.json()
-            #             st.write(f"Résultats de l'entraînement : {results}")
-            #         else:
-            #             st.error("Impossible d'obtenir les résultats de l'entraînement")
-            #     except requests.RequestException:
-            #         st.error("Impossible de communiquer avec l'API admin")
+                    st.info(response.json())
+                except Exception as e:
+                    st.error(f"Impossible de communiquer avec l'API d'entraînement : {e}")
+
 
             st.write("---")
 
@@ -703,19 +672,17 @@ elif page == "Interface utilisateur (APIs)":
                         "api-key": "abcd1234"
                     }
                     data = {"run_id": run_id}
+                    # On demande à l'API de changer le modèle en production
                     response = requests.post(f"{ADMIN_API_URL}/switchmodel", headers=headers, data=data)
-                    if response.status_code == 200:
-                        st.success(response.json())
-                    else:
-                        st.error("Échec du changement du modèle")
-                except requests.RequestException:
-                    st.error("Impossible de communiquer avec l'API admin")
+                    st.info(response.json())
+                except Exception as e:
+                    st.error(f"Impossible de communiquer avec l'API d'inférence : {e}")
 
 elif page == "Conclusion":
 
     st.markdown("<h1 style='text-align: center;'>Projet MLOps - Reconnaissance d'oiseaux</h1>", unsafe_allow_html=True)
 
-    # Chargement et affichage de l'image de couverture
+    # On charge et affiche l'image de couverture
     try:
         image = load_and_resize_image("oiseau_cover.jpg", 400)
         col1, col2, col3 = st.columns([1, 2, 1])
