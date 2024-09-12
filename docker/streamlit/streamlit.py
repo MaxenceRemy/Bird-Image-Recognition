@@ -469,23 +469,70 @@ elif page == "Résultats de l'entraînement":
 
             with col1:
                 st.subheader("Dernier modèle entraîné :")
-                st.markdown(f"""<p style="font-size: 18px; display: inline;">Identifiant du run MLFlow : </p> <p style="font-size: 18px; color: #0da0e4; display: inline;"> {results['latest_run_id']}</p>""", unsafe_allow_html = True)
-                st.markdown(f"""<p style="font-size: 18px; display: inline;">Précision (sur le set de validation) : </p> <p style="font-size: 18px; color: #0da0e4; display: inline;"> {results['latest_run_val_accuracy']}</p>""", unsafe_allow_html = True)
-                st.markdown(f"""<p style="font-size: 18px; display: inline;">Perte (sur le set de validation) : </p> <p style="font-size: 18px; color: #0da0e4; display: inline;"> {results['latest_run_val_loss']}</p>""", unsafe_allow_html = True)
-                st.markdown(f"""<b style="font-size: 18px; display: inline;"> </br> Les 10 pires classes : </b>""", unsafe_allow_html = True)
+                st.markdown(
+                    f"""<p style="font-size: 18px; display: inline;">Identifiant du run MLFlow : \
+                    </p> <p style="font-size: 18px; color: #0da0e4; display: inline;"> \
+                    {results['latest_run_id']}</p>""",
+                    unsafe_allow_html=True
+                )
+                st.markdown(
+                    f"""<p style="font-size: 18px; display: inline;">Précision (sur le set de validation) : \
+                    </p> <p style="font-size: 18px; color: #0da0e4; display: inline;"> \
+                    {results['latest_run_val_accuracy']}</p>""",
+                    unsafe_allow_html=True
+                )
+                st.markdown(
+                    f"""<p style="font-size: 18px; display: inline;">Perte (sur le set de validation) : \
+                    </p> <p style="font-size: 18px; color: #0da0e4; display: inline;"> \
+                    {results['latest_run_val_loss']}</p>""",
+                    unsafe_allow_html=True
+                )
+                st.markdown(
+                    """<b style="font-size: 18px; display: inline;"> </br> Les 10 pires classes : </b>""",
+                    unsafe_allow_html=True
+                )
                 for classe, score in results['latest_run_worst_f1_scores'].items():
-                    st.write(f"""<p style="font-size: 18px; display: inline;">{classe}</p> : <p style="font-size: 18px; color: #0da0e4; display: inline;">{score} </p>""", unsafe_allow_html = True)
+                    st.write(
+                        f"""<p style="font-size: 18px; display: inline;">{classe}</p> : \
+                        <p style="font-size: 18px; color: #0da0e4; display: inline;">{score} </p>""",
+                        unsafe_allow_html=True
+                    )
             with col2:
                 st.subheader("Modèle actuellement utilisé :")
-                st.markdown(f"""<p style="font-size: 18px; display: inline;">Identifiant du run MLFlow : </p> <p style="font-size: 18px; color: #0da0e4; display: inline;"> {results['main_model_run_id']}</p>""", unsafe_allow_html = True)
-                st.markdown(f"""<p style="font-size: 18px; display: inline;">Précision (sur le set de validation) : </p> <p style="font-size: 18px; color: #0da0e4; display: inline;"> {results['main_model_val_accuracy']}</p>""", unsafe_allow_html = True)
-                st.markdown(f"""<p style="font-size: 18px; display: inline;">Perte (sur le set de validation) : </p> <p style="font-size: 18px; color: #0da0e4; display: inline;"> {results['main_model_val_loss']}</p>""", unsafe_allow_html = True)
-                st.markdown(f"""<b style="font-size: 18px; display: inline;"> </br> Les 10 pires classes : </b>""", unsafe_allow_html = True)
+                st.markdown(
+                    f"""<p style="font-size: 18px; display: inline;">Identifiant du run MLFlow : \
+                    </p> <p style="font-size: 18px; color: #0da0e4; display: inline;"> \
+                    {results['main_model_run_id']}</p>""",
+                    unsafe_allow_html=True
+                )
+                st.markdown(
+                    f"""<p style="font-size: 18px; display: inline;">Précision (sur le set de validation) : \
+                    </p> <p style="font-size: 18px; color: #0da0e4; display: inline;"> \
+                    {results['main_model_val_accuracy']}</p>""",
+                    unsafe_allow_html=True
+                )
+                st.markdown(
+                    f"""<p style="font-size: 18px; display: inline;">Perte (sur le set de validation) : \
+                    </p> <p style="font-size: 18px; color: #0da0e4; display: inline;"> \
+                    {results['main_model_val_loss']}</p>""",
+                    unsafe_allow_html=True
+                )
+                st.markdown(
+                    """<b style="font-size: 18px; display: inline;"> </br> Les 10 pires classes : </b>""",
+                    unsafe_allow_html=True
+                )
                 for classe, score in results['main_model_worst_f1_scores'].items():
-                    st.write(f"""<p style="font-size: 18px; display: inline;">{classe}</p> : <p style="font-size: 18px; color: #0da0e4; display: inline;">{score} </p>""", unsafe_allow_html = True)
+                    st.write(
+                        f"""<p style="font-size: 18px; display: inline;">{classe}</p> : \
+                        <p style="font-size: 18px; color: #0da0e4; display: inline;">{score} </p>""",
+                        unsafe_allow_html=True
+                    )
 
             # On ajoute un lien vers l'interface MLflow
-            st.markdown("</br>[Accéder à plus de détails sur l'interface MLFlow](http://localhost:5200)", unsafe_allow_html = True)
+            st.markdown(
+                "</br>[Accéder à plus de détails sur l'interface MLFlow](http://localhost:5200)",
+                unsafe_allow_html=True
+            )
 
         except Exception as e:
             st.error(f"Impossible de communiquer avec l'API administrateur : {str(e)}")
@@ -517,7 +564,7 @@ elif page == "Interface utilisateur (APIs)":
                     st.session_state.user_token = response.json()["access_token"]
                 else:
                     st.error("Échec de l'authentification.")
-            except Exception as e:
+            except Exception:
                 st.error("Impossible de se connecter à l'API utilisateur. \
                          Assurez-vous que les conteneurs Docker sont en cours d'exécution.")
 
@@ -546,9 +593,9 @@ elif page == "Interface utilisateur (APIs)":
                     }
                     # On fait une requête vers l'API
                     response = requests.post(f"{USER_API_URL}/predict", files=files, headers=headers)
-                    
+
                     prediction = response.json()
-                except Exception as e:
+                except Exception:
                     st.error(f"Impossible de communiquer avec l'API d'inférence : {response.json()}")
 
                 try:
@@ -587,7 +634,7 @@ elif page == "Interface utilisateur (APIs)":
                         st.markdown(f"""<p style="color: #b26a19; font-size: 20px;"> \
                                     {str(round(prediction['scores'][2] * 100, 2)) + "%"} </p>""",
                                     unsafe_allow_html=True)
-                
+
                     # On affiche les boutons pour récupérer l'avis de l'utilisateur
                     st.subheader("Une des prédictions est-elle correcte ?")
                     col1, col2, col3 = st.columns([0.1, 0.4, 0.5])
@@ -609,10 +656,8 @@ elif page == "Interface utilisateur (APIs)":
                             st.session_state.specie = 0
                             st.rerun()
 
-                except Exception as e:
+                except Exception:
                     st.error(f"Impossible de récupérer les images associées aux classes : {response.json()}")
-
-
 
                 try:
                     # Si l'utilisateur dit Oui, on affiche la liste des espèces
@@ -632,9 +677,9 @@ elif page == "Interface utilisateur (APIs)":
                             ["Sélectionnez une espèce..."] + species_list['species']
                         )
 
-                except Exception as e:
-                    st.error(f"Impossible de récupérer la liste des espèces...")
-                
+                except Exception:
+                    st.error("Impossible de récupérer la liste des espèces...")
+
                 # Si l'utilisateur a fait sa sélection, on demande à l'API d'ajouter l'image
                 if st.session_state.selected_specie != "Sélectionnez une espèce...":
                     data = {"species": st.session_state.selected_specie,
@@ -646,8 +691,6 @@ elif page == "Interface utilisateur (APIs)":
                     st.session_state.specie = 0
                     st.session_state.selected_specie = "Sélectionnez une espèce..."
                     st.rerun()
-                    
-               
 
     else:
         st.subheader("API Admin")
@@ -666,7 +709,7 @@ elif page == "Interface utilisateur (APIs)":
                     st.session_state.admin_token = response.json()["access_token"]
                 else:
                     st.error(f"Impossible de se connecter à l'API administrateur, erreur {response.status_code}")
-            except Exception as e:
+            except Exception:
                 st.error("Impossible de se connecter à l'API administrateur. \
                          Assurez-vous que les conteneurs Docker sont en cours d'exécution.")
 
@@ -689,7 +732,7 @@ elif page == "Interface utilisateur (APIs)":
                     response = requests.post(f"{ADMIN_API_URL}/add_user", headers=headers, data=data)
 
                     st.info(response.json())
-                    
+
                 except Exception as e:
                     st.error(f"Impossible de communiquer avec l'API administrateur : {e}")
 
@@ -708,7 +751,6 @@ elif page == "Interface utilisateur (APIs)":
                     st.info(response.json())
                 except Exception as e:
                     st.error(f"Impossible de communiquer avec l'API d'entraînement : {e}")
-
 
             st.write("---")
 

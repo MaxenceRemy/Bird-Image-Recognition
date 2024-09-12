@@ -10,7 +10,8 @@ import numpy as np
 class SizeManager:
     """
     Cette classe `SizeManager` gère le redimensionnement et le nettoyage du dataset.
-    On génère un CSV avec les métadonnées des images, supprime certaines classes et redimensionne les images en 224x224px. 
+    On génère un CSV avec les métadonnées des images, supprime certaines classes et redimensionne
+    les images en 224x224px.
     """
     def __init__(self, db_to_clean_path, target_size=(224, 224)):
         # On définit les chemins et la taille cible

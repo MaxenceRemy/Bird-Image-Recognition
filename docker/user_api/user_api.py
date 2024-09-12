@@ -279,7 +279,8 @@ async def get_class_image(
                     image_path, media_type="image/jpeg", filename=f"{classe}_image.jpg"
                 )
         else:
-            return "Premier lancement -> le dataset est en cours de téléchargement/traitement, vous serez notifié par mail de la fin du processus."
+            return "Premier lancement -> le dataset est en cours de téléchargement/traitement, \
+                vous serez notifié par mail de la fin du processus."
     except Exception as e:
         logging.error(
             f"Erreur lors de la récupération de l'image de l'espèce {classe}: {str(e)}"
