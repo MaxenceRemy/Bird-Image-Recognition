@@ -16,7 +16,7 @@ docker container rm monitoring
 docker container rm mlflowui
 docker container rm streamlit
 
-# docker volume rm docker_main_volume
+docker volume rm docker_main_volume
 
 docker image prune -a -f
 
