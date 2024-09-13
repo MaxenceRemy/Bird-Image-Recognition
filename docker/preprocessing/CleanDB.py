@@ -81,9 +81,9 @@ class CleanDB:
             os.mkdir(self.all_file_path)
         # Si les dossiers sont déjà fusionnés, on arrête
         elif (
-            not os.path.isdir(os.path.join(self.db_to_clean_path, "train"))
-            and not os.path.isdir(os.path.join(self.db_to_clean_path, "test"))
-            and not os.path.isdir(os.path.join(self.db_to_clean_path, "valid"))
+            not os.path.isdir(os.path.join(self.db_to_clean_path, "train")) and
+            not os.path.isdir(os.path.join(self.db_to_clean_path, "test")) and
+            not os.path.isdir(os.path.join(self.db_to_clean_path, "valid"))
         ):
             print("Les dossiers sont déjà fusionnés")
             return
@@ -167,7 +167,7 @@ class CleanDB:
 
     def calcul_percent_number(self, percent):
         """
-        Calcule le nombre de fichiers à déplacer pour un pourcentage donné,
+        Calcule le nombre de fichiers à déplacer pour un pourcentage donné, 
         basé sur la taille d'une seule classe.
         """
         all_classes = os.listdir(self.all_file_path)
@@ -181,7 +181,7 @@ class CleanDB:
 
     def extract_percent_from_one_class(self, classe_index, all_classes, set_path, percent):
         """
-        Déplace un pourcentage d'images d'une seule classe vers un set donné.
+        Déplace un pourcentage d'images d'une seule classe vers un set donné. 
         Les images sont choisies au hasard.
         """
         # On récupère le nom de la classe et son chemin
@@ -233,7 +233,7 @@ class CleanDB:
 
     def start_clean(self):
         """
-        Démarre la procédure complète de nettoyage du dataset.
+        Démarre la procédure complète de nettoyage du dataset. 
         """
         # On instancie la classe
         sizeManager = SizeManager(db_to_clean_path=self.db_to_clean_path)
@@ -282,7 +282,7 @@ class CleanDB:
 
     def check_percents(self):
         """
-        Vérifie les proportions d'images dans train, test et valid.
+        Vérifie les proportions d'images dans train, test et valid. 
         Affiche les résultats pour chaque set et la taille totale de celui-ci.
         """
         # On crée un dictionnaire pour stocker les proportions

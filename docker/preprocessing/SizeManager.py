@@ -10,8 +10,7 @@ import numpy as np
 class SizeManager:
     """
     Cette classe `SizeManager` gère le redimensionnement et le nettoyage du dataset.
-    On génère un CSV avec les métadonnées des images, supprime certaines classes et redimensionne
-    les images en 224x224px.
+    On génère un CSV avec les métadonnées des images, supprime certaines classes et redimensionne les images en 224x224px. 
     """
     def __init__(self, db_to_clean_path, target_size=(224, 224)):
         # On définit les chemins et la taille cible
@@ -79,6 +78,7 @@ class SizeManager:
                 fullSetPath = os.path.join(self.db_to_clean_path, setPath)
                 # Si c'est un fichier, on passe
                 if os.path.isfile(fullSetPath):
+ 
                     continue
                 if os.path.isfile(fullSetPath):
                     os.remove(fullSetPath)
@@ -111,10 +111,10 @@ class SizeManager:
             df_birdName.loc[:, "ratio_size_close_to_1"] = 1 - df_birdName["ratio_size"] < 0.2
 
             # On compte combien d'images sont proches d'un ratio 1:1
-            true_count = df_birdName[df_birdName["ratio_size_close_to_1"]][
+            true_count = df_birdName[df_birdName["ratio_size_close_to_1"] == True][
                 "ratio_size_close_to_1"
             ].value_counts()
-            false_count = df_birdName[not df_birdName["ratio_size_close_to_1"]][
+            false_count = df_birdName[df_birdName["ratio_size_close_to_1"] == False][
                 "ratio_size_close_to_1"
             ].value_counts()
 
