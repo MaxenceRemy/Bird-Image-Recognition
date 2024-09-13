@@ -14,7 +14,7 @@ class UnderSamplerImages:
     def __init__(self, root_dir, treshold=False):
         self.root_dir = root_dir
 
-        # Si aucun seuil n'est défini, on récupère le nombre 
+        # Si aucun seuil n'est défini, on récupère le nombre
         # d'images de la classe la plus petite
         if treshold is False:
             self.treshold = self.get_min_size()
@@ -81,7 +81,6 @@ class UnderSamplerImages:
         """
         Affiche le nombre d'images par classe et vérifie combien dépassent le seuil
         """
-    
         print("Valeur seuille : ", self.treshold)
         all_files_path = os.path.join(self.root_dir, "all_files")
         # Si le dossier n'existe pas, on s'arrête
@@ -100,6 +99,7 @@ class UnderSamplerImages:
                     nb_image_by_classe.append(size_classe - self.treshold)
         print("Il y a ", len(nb_image_by_classe), " classe(s) à diminuer")
         print("Il faut supprimer ", sum(nb_image_by_classe), " image(s)")
+
 
 # Exemple si utilisé directement
 if __name__ == "__main__":
