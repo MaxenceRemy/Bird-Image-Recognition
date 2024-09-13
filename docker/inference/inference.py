@@ -8,6 +8,8 @@ import logging
 import tensorflow as tf
 import time
 import json
+import csv
+from datetime import datetime
 from alert_system import AlertSystem
 
 # On lance le serveur FastAPI
@@ -48,6 +50,29 @@ class predictClass:
     def __init__(self, model_path, img_size=(224, 224)):
         self.img_size = img_size
         self.model_path = model_path
+
+        # region On créer un dossier pour stocker l'historique des inférences
+        volume_path = "volume_data"
+        hist_inferences_dir = os.path.join(volume_path, "logs/inferences")
+        os.makedirs(hist_inferences_dir, exist_ok=True)
+
+        self.csv_filename = os.path.join(
+            hist_inferences_dir, f'inferences_{datetime.now().strftime("%d%m%Y_%H%M")}.csv'
+        )
+        with open(self.csv_filename, "w", newline="") as csvfile:
+            writer = csv.writer(csvfile)
+
+            columns = [
+                "timestamp",
+                "id_model",
+                "image_name",
+                "classe",
+                "score"
+            ]
+
+            writer.writerow(columns)
+
+        # endregion
 
         # Configurer GPU si disponible
         self.configure_gpu()
@@ -164,10 +189,20 @@ async def predict(file_name: str):
         image_path = os.path.join(temp_folder, file_name)
         # On lance la prédiction
         meilleures_classes, meilleurs_scores = classifier.predict(image_path)
-        logging.info(
-            f"""Prédiction effectuée : id modèle = {run_id}, image_name = {file_name},
-            classe = {meilleures_classes}, score = {meilleurs_scores}"""
-        )
+
+        # On enregistre la prédiction
+        with open(classifier.csv_filename, "a", newline="") as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(
+                [
+                    datetime.now().strftime("%d-%m-%Y %H:%M:%S"),
+                    run_id,
+                    file_name,
+                    meilleures_classes,
+                    meilleurs_scores
+                ]
+            )
+
         # On calcule temps qui a été nécessaire
         end_time = time.time()
         total_time = end_time - start_time
