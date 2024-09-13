@@ -43,6 +43,7 @@ logging.basicConfig(
 # On instancie la classe qui permet d'envoyer des alertes par email
 alert_system = AlertSystem()
 
+
 def save_json(filepath, dict):
     """
     Permet d'enregistrer un dictionnaire en format .json
@@ -71,21 +72,15 @@ def start_cleaning(new_classes_to_track=[]):
     Lance le nettoyage de la base de données en copiant les classes suffisamenent grandes de
     dataset_raw vers dataset_clean et en appliquant le preprocessing.
     """
-    # La fonction reste en attente tant que le container de training est actif
-    with open(training_state_path, "r") as file:
-        state = file.read()
-    while state == "1":
-        with open(training_state_path, "r") as file:
-            state = file.read()
-        time.sleep(5)
-
-    # La fonction reste en attente tant que le container de monitoring est actif
-    with open(monitoring_state_path, "r") as file:
-        state = file.read()
-    while state == "1":
-        with open(monitoring_state_path, "r") as file:
-            state = file.read()
-        time.sleep(5)
+    # La fonction reste en attente tant que les containers de training et drift_monitoring sont actifs
+    with open(training_state_path, "r") as training_file:
+        with open(monitoring_state_path, "r") as monitoring_file:
+            training_state = training_file.read()
+            monitoring_state = monitoring_file.read()
+            while training_state == "1" or monitoring_state == "1":
+                time.sleep(5)
+                training_state = training_file.read()
+                monitoring_state = monitoring_file.read()
 
     # On indique que ce container est actif
     with open(state_path, "w") as file:
@@ -101,7 +96,8 @@ def start_cleaning(new_classes_to_track=[]):
     shutil.copytree(dataset_raw_path, dataset_clean_path, dirs_exist_ok=True)
 
     # On supprime tous les fichiers qui sont en double avec dataset_raw
-    os.remove(os.path.join(dataset_clean_path, "dataset_version.json"))
+    if os.path.exists(os.path.join(dataset_clean_path, "dataset_version.json")):
+        os.remove(os.path.join(dataset_clean_path, "dataset_version.json"))
     os.remove(os.path.join(dataset_clean_path, "birds.csv"))
     os.remove(os.path.join(dataset_clean_path, "birds_list.csv"))
 
@@ -162,10 +158,7 @@ def auto_update_dataset(dataset_name, destination, first_launch=False):
     # On télécharge le fichier zip du dataset via l'API de Kaggle dans un dossier temporaire
     temp_destination = os.path.join(destination, "temp")
     kaggle_api.dataset_download_files(dataset_name, path=temp_destination, unzip=True)
-    # On actualise la version du dataset local
-    with open(dataset_version_path, "w") as file:
-        json.dump(dataset_info, file, indent=4)
-
+    
     # On supprime ce dont on a pas besoin
     os.remove(os.path.join(temp_destination, "EfficientNetB0-525-(224 X 224)- 98.97.h5"))
 
@@ -179,7 +172,7 @@ def auto_update_dataset(dataset_name, destination, first_launch=False):
     shutil.copytree(temp_destination, destination, dirs_exist_ok=True)
     shutil.rmtree(temp_destination)
     logging.info("Mise à jour du dataset terminée !")
-    if first_launch == False:
+    if not first_launch:
         alert_system.send_alert(
             subject="Un nouveau dataset vient d'être téléchargé !",
             message="""Un nouveau dataset vient d'être téléchargé.
@@ -187,6 +180,19 @@ def auto_update_dataset(dataset_name, destination, first_launch=False):
                                 classes, le preprocessing se déclenchera automatiquement
                                 et un autre mail sera envoyé.""",
         )
+
+    # Lors du premier lancement, on rajoute ce fichier à la fin du preprocessing
+    # pour permettre de relancer le processus complet en cas de crash
+    # car c'est la présence de ce fichier qui indique la nécessité 
+    # de télécharger le dataset la première fois
+    if first_launch == False:
+        # On actualise la version du dataset local
+        with open(dataset_version_path, "w") as file:
+            json.dump(dataset_info, file, indent=4)
+
+    else:
+        # On donnes les informations pour enregistrer le fichier
+        return dataset_info
 
 
 def refresh_images_count(base_dict, updated_dict, dict_class_key, dict_count_key):
@@ -210,7 +216,7 @@ try:
             file.write("2")
         logging.info("Téléchargement du dataset car aucun n'est présent...")
         # On télécharge le dataset
-        auto_update_dataset(dataset_name="gpiosenka/100-bird-species", destination=dataset_raw_path, first_launch=True)
+        dataset_info = auto_update_dataset(dataset_name="gpiosenka/100-bird-species", destination=dataset_raw_path, first_launch=True)
         # On lance un premier preprocessing
         logging.info("Lancement du premier preprocessing...")
         start_cleaning()
@@ -237,6 +243,10 @@ try:
         with open(state_path, "w") as file:
             file.write("0")
 
+        # On actualise la version du dataset local
+        with open(dataset_version_path, "w") as file:
+            json.dump(dataset_info, file, indent=4)
+
         logging.info("Le dataset de base a bien été téléchargé et le preprocessing est terminé !")
         alert_system.send_alert(
             subject="Le dataset de base est prêt !",
@@ -257,7 +267,10 @@ try:
         logging.info("Chargement des données de tracking du dataset")
 except Exception as e:
     logging.error(f"Erreur lors de l'ouverture du fichier de tracking : {e}")
-    alert_system.send_alert(subject="Erreur lors du preprocessing", message=f"Erreur lors de l'ouverture du fichier de tracking : {e}")
+    alert_system.send_alert(
+        subject="Erreur lors du preprocessing",
+        message=f"Erreur lors de l'ouverture du fichier de tracking : {e}"
+    )
 
 
 # Tous les jours à 02h, on vérifie la présence d'un nouveau dataset
@@ -352,13 +365,19 @@ while True:
             )
     except Exception as e:
         logging.error(f"Erreur lors du tracking des classes : {e}")
-        alert_system.send_alert(subject="Erreur lors du preprocessing", message=f"Erreur lors du tracking des classes : {e}")
+        alert_system.send_alert(
+            subject="Erreur lors du preprocessing",
+            message=f"Erreur lors du tracking des classes : {e}"
+        )
 
     try:
         # On fait tourner le scheduler pour le téléchargement automatique du dataset
         schedule.run_pending()
     except Exception as e:
         logging.error(f"Error lors de la recherche de mise à jour du dataset : {e}")
-        alert_system.send_alert(subject="Erreur lors du preprocessing", message=f"Error lors de la recherche de mise à jour du dataset : {e}")
+        alert_system.send_alert(
+            subject="Erreur lors du preprocessing",
+            message=f"Error lors de la recherche de mise à jour du dataset : {e}"
+        )
     # On attends 5 secondes à chaque exécution de la boucle pour ne pas saturer le processeur
     time.sleep(5)
