@@ -66,8 +66,8 @@ class predictClass:
                 "timestamp",
                 "id_model",
                 "image_name",
-                "classe",
-                "score"
+                "classes",
+                "scores"
             ]
 
             writer.writerow(columns)
