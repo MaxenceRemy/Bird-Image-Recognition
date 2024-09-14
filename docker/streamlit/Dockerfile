@@ -10,8 +10,8 @@ COPY mlflow_logo.png .
 COPY tensorflow_logo.png .
 COPY github_logo.png .
 COPY architecture.svg .
-COPY pipeline_user.svg .
-COPY pipeline_mlops.svg .
-COPY logo.jpeg .
+COPY application.svg .
+COPY pipeline_ci_cd.svg .
+COPY logo.png .
 EXPOSE 5300
 CMD ["streamlit", "run", "streamlit.py"]
