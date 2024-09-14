@@ -1,6 +1,6 @@
 # Projet MLOps de reconnaissance d'oiseaux 
 
-Ce projet implémente un système de reconnaissance d'oiseaux basé sur des images, avec une infrastructure MLOps complète pour la gestion des données, l'entraînement, le déploiement et le monitoring du modèle.
+Ce projet implémente un système de reconnaissance d'images d'oiseaux, avec une infrastructure MLOps complète pour la gestion des données, l'entraînement, le déploiement et le monitoring du modèle.
 
 **IMPORTANT** : seule la version docker est à jour avec toutes les dernières améliorations. Le code le plus récent se situe donc uniquement dans le dossier "docker".
 Le reste du code est considéré comme ancien et ne doit être exécuté qu'à des fins d'expérimentation.

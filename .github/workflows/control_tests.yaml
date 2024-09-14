@@ -40,10 +40,10 @@ jobs:
           echo "Pulling ruizguillaume/aviscan:${docker_image}"
           docker pull ruizguillaume/aviscan:${docker_image}
           if [ "$(docker images -q ruizguillaume/aviscan:${docker_image} 2> /dev/null)" == "" ]; then
-            echo "Docker image ruizguillaume/aviscan:${docker_image} not found!"
+            echo "Docker image ruizguillaume/aviscan:${docker_image} not found !"
             exit 1
           else
-            echo "Docker image ruizguillaume/aviscan:${docker_image} pulled successfully!"
+            echo "Docker image ruizguillaume/aviscan:${docker_image} pulled successfully !"
             docker image rm -f ruizguillaume/aviscan:${docker_image}
           fi
         done

@@ -120,7 +120,7 @@ class TestAPI(unittest.TestCase):
     #     expected_label = "Toucan" # Le label attendu correspond au nom du répertoire contenu l'image envoyée
     #     image_file = os.listdir(f"./data/valid/{expected_label}")[0] # On choisit une image à tester
     #     image_path = f"./data/valid/{expected_label}/{image_file}" # On récupère le chemin de l'image
-    #     print("!!!!!!!!!!!!!!!!!!!!!!!!!!! Chemin de l'image ", image_path)
+
     #     with open(image_path, "rb") as image_file:
 
     #         files = {
