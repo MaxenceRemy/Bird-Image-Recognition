@@ -4,7 +4,7 @@ services:
     build:
       context: ./user_api
       dockerfile: Dockerfile
-    image: user_api:latest
+    image: ruizguillaume/aviscan:user_api
     container_name: user_api
     environment:
       - API_KEY=${API_KEY}
@@ -24,7 +24,7 @@ services:
     build:
       context: ./admin_api
       dockerfile: Dockerfile
-    image: admin_api:latest
+    image: ruizguillaume/aviscan:admin_api
     container_name: admin_api
     environment:
       - API_KEY=${API_KEY}
@@ -44,7 +44,7 @@ services:
     build:
       context: ./inference
       dockerfile: Dockerfile
-    image: inference:latest
+    image: ruizguillaume/aviscan:inference
     container_name: inference
     environment:
       - SENDER_EMAIL=${SENDER_EMAIL}
@@ -64,7 +64,7 @@ services:
     build:
       context: ./training
       dockerfile: Dockerfile
-    image: training:latest
+    image: ruizguillaume/aviscan:training
     container_name: training
     environment:
       - SENDER_EMAIL=${SENDER_EMAIL}
@@ -84,7 +84,7 @@ services:
     build:
       context: ./preprocessing
       dockerfile: Dockerfile
-    image: preprocessing:latest
+    image: ruizguillaume/aviscan:preprocessing
     container_name: preprocessing
     environment:
       - SENDER_EMAIL=${SENDER_EMAIL}
@@ -99,7 +99,7 @@ services:
     build:
       context: ./monitoring
       dockerfile: Dockerfile
-    image: monitoring:latest
+    image: ruizguillaume/aviscan:monitoring
     container_name: monitoring
     environment:
       - SENDER_EMAIL=${SENDER_EMAIL}
@@ -119,7 +119,7 @@ services:
     build:
       context: ./mlflowui
       dockerfile: Dockerfile
-    image: mlflowui:latest
+    image: ruizguillaume/aviscan:mlflowui
     container_name: mlflowui
     ports:
       - target: 5200
@@ -133,7 +133,7 @@ services:
     build:
       context: ./streamlit
       dockerfile: Dockerfile
-    image: streamlit:latest
+    image: ruizguillaume/aviscan:streamlit
     container_name: streamlit
     environment:
       - STREAMLIT_SERVER_PORT=5300
