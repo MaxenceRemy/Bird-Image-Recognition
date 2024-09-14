@@ -1,6 +1,6 @@
 # Vue d'ensemble du Projet
 
-Ce projet vise à créer un système de reconnaissance d'oiseaux basé sur des images, en utilisant des techniques de deep learning et des pratiques MLOps.
+Ce projet vise à créer un système de reconnaissance d'oiseaux basé sur des images, en utilisant des techniques de deep learning et de MLOps.
 
 ## Objectifs
 
@@ -14,7 +14,7 @@ Ce projet vise à créer un système de reconnaissance d'oiseaux basé sur des i
 2. Pipeline d'entraînement et d'évaluation
 3. Système de monitoring et de détection de drift
 4. Interface utilisateur Streamlit
-5. Scripts de test et d'évaluation
+5. Scripts de tests et d'évaluation
 
 ## Flux de Travail
 
