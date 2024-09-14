@@ -29,30 +29,9 @@ jobs:
         echo '{"username":"${{ secrets.KAGGLE_USERNAME }}","key":"${{ secrets.KAGGLE_KEY }}"}' > kaggle.json
         chmod 400 kaggle.json
 
-
-
-
-
-
-
-
-
-
-
-    - name: Login to DockerHub
-      uses: docker/login-action@v2
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-
-    - name: Define Docker image tags
-      id: set-tags
-      run: |
-        echo "DOCKER_IMAGES=user_api admin_api inference training preprocessing monitoring mlflowui streamlit" >> $GITHUB_ENV
-
     - name: Pull Docker images
       run: |
+        echo "DOCKER_IMAGES=user_api admin_api inference training preprocessing monitoring mlflowui streamlit" >> $GITHUB_ENV
         for docker_image in $DOCKER_IMAGES; do
           echo "Pulling ruizguillaume/aviscan:${docker_image}"
           docker pull ruizguillaume/aviscan:${docker_image}
@@ -61,22 +40,9 @@ jobs:
             exit 1
           else
             echo "Docker image ruizguillaume/aviscan:${docker_image} pulled successfully!"
+            docker image rm -f ruizguillaume/aviscan:${docker_image}
           fi
         done
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     - name: Run unit tests
       run: |
