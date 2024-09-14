@@ -29,9 +29,13 @@ jobs:
         echo '{"username":"${{ secrets.KAGGLE_USERNAME }}","key":"${{ secrets.KAGGLE_KEY }}"}' > kaggle.json
         chmod 400 kaggle.json
 
-    - name: Pull Docker images
+    - name: Docker images tags listing
+      id: set-tags
       run: |
         echo "DOCKER_IMAGES=user_api admin_api inference training preprocessing monitoring mlflowui streamlit" >> $GITHUB_ENV
+
+    - name: Pull Docker images
+      run: |
         for docker_image in $DOCKER_IMAGES; do
           echo "Pulling ruizguillaume/aviscan:${docker_image}"
           docker pull ruizguillaume/aviscan:${docker_image}
