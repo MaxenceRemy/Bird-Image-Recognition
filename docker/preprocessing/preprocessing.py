@@ -149,11 +149,11 @@ def auto_update_dataset(dataset_name, destination, first_launch=False):
             current_dataset_version = datetime.strptime(json.load(file).get("last_updated"), "%Y-%m-%d %H:%M:%S")
             # On termine la fonction ici si aucune version plus récente n'est disponible
             if current_dataset_version >= online_dataset_version:
-                print("Le dataset est à jour, on ne le télécharge pas.")
+                logging.info("Le dataset est à jour, on ne le télécharge pas.")
                 return
             # Sinon, on continue le programme
             else:
-                print("La version du dataset nécéssite une mise à jour.")
+                logging.info("La version du dataset nécéssite une mise à jour.")
 
     # On télécharge le fichier zip du dataset via l'API de Kaggle dans un dossier temporaire
     temp_destination = os.path.join(destination, "temp")
@@ -278,7 +278,7 @@ except Exception as e:
 
 
 # Tous les jours à 02h, on vérifie la présence d'un nouveau dataset
-schedule.every().day.at("02:00").do(auto_update_dataset, "gpiosenka/100-bird-species", dataset_raw_path)
+schedule.every().day.at("20:07").do(auto_update_dataset, "gpiosenka/100-bird-species", dataset_raw_path)
 
 # ----------------------------------------------------------------------------------------- #
 
