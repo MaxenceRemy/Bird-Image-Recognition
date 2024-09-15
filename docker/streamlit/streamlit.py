@@ -633,8 +633,11 @@ elif page == "Interface utilisateur (APIs)":
 
                 # Affichage des prédictions
                 for i, col in enumerate([col2, col3, col4]):
-                    with col:
-                        st.image(st.session_state.class_images[i])
+                    with col:                      
+                        try:
+                            st.image(st.session_state.class_images[i])
+                        except Exception:
+                            st.error("Impossible d'afficher les images associées aux classes.")
                         st.markdown(
                             f"""<p style="font-size: 20px;"> {st.session_state.prediction['predictions'][i]} </p>""",
                             unsafe_allow_html=True
