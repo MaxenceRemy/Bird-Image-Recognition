@@ -717,7 +717,7 @@ elif page == "Interface utilisateur (APIs)":
                                 st.rerun()
                             else:
                                 st.error("Échec de l'envoi de l'image.")
-                                
+
             # Réinitialiser l'état du feedback si aucun fichier n'est uploadé
             else:
                 st.session_state.feedback_given = False

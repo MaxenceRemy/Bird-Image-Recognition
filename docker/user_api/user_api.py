@@ -333,4 +333,3 @@ async def add_image(
             status_code=500,
             detail=f"Une erreur est survenue lors de l'ajout de l'image: {str(e)}",
         )
-
