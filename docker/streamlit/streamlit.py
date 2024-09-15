@@ -633,7 +633,7 @@ elif page == "Interface utilisateur (APIs)":
 
                 # Affichage des prédictions
                 for i, col in enumerate([col2, col3, col4]):
-                    with col:                      
+                    with col:
                         try:
                             st.image(st.session_state.class_images[i])
                         except Exception:
@@ -673,10 +673,13 @@ elif page == "Interface utilisateur (APIs)":
                             "is_unknown": True
                         }
                         headers = {"Authorization": f"Bearer {st.session_state.user_token}", "api-key": "abcd1234"}
-                        response = requests.post(f"{ADMIN_API_URL}/add_image", headers=headers, data=data)
-                        st.session_state.success = True
-                        st.session_state.feedback_given = True
-                        st.rerun()
+                        response = requests.post(f"{USER_API_URL}/add_image", headers=headers, data=data)
+                        if response.status_code == 200:
+                            st.session_state.success = True
+                            st.session_state.feedback_given = True
+                            st.rerun()
+                        else:
+                            st.error("Échec de l'envoi de l'image.")
 
                 # Gestion de la sélection d'espèce
                 if 'feedback_step' in st.session_state and not st.session_state.get('feedback_given', False):
@@ -706,11 +709,15 @@ elif page == "Interface utilisateur (APIs)":
                                     "is_unknown": False
                                     }
                             headers = {"Authorization": f"Bearer {st.session_state.user_token}", "api-key": "abcd1234"}
-                            response = requests.post(f"{ADMIN_API_URL}/add_image", headers=headers, data=data)
-                            st.session_state.success = True
-                            st.session_state.feedback_given = True
-                            st.rerun()
+                            response = requests.post(f"{USER_API_URL}/add_image", headers=headers, data=data)
 
+                            if response.status_code == 200:
+                                st.session_state.success = True
+                                st.session_state.feedback_given = True
+                                st.rerun()
+                            else:
+                                st.error("Échec de l'envoi de l'image.")
+                                
             # Réinitialiser l'état du feedback si aucun fichier n'est uploadé
             else:
                 st.session_state.feedback_given = False

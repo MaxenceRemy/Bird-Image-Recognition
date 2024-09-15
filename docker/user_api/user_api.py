@@ -5,7 +5,8 @@ from fastapi import (
     status,
     File,
     UploadFile,
-    Header
+    Header,
+    Form
 )
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from typing import Optional
@@ -44,6 +45,9 @@ users_path = os.path.join(users_folder, "authorized_users.json")
 temp_path = os.path.join(volume_path, "temp_images")
 state_folder = os.path.join(volume_path, "containers_state")
 preprocessing_state_path = os.path.join(state_folder, "preprocessing_state.txt")
+temp_folder = os.path.join(volume_path, "temp_images")
+unknown_images_path = os.path.join(volume_path, "unknown_images")
+
 
 # On créer les dossiers si nécessaire
 os.makedirs(log_folder, exist_ok=True)
@@ -289,3 +293,44 @@ async def get_class_image(
             status_code=500,
             detail=f"Erreur lors de la récupération de l'image de l'espèce {classe}: {str(e)}",
         )
+
+
+# Route pour ajouter une image
+@app.post("/add_image")
+async def add_image(
+    species: str = Form(...),
+    image_name: str = Form(...),
+    is_unknown: bool = Form(False),
+    api_key: str = Depends(verify_api_key),
+    current_user: str = Depends(verify_token),
+):
+    try:
+        logging.info(f"Requête /add_image reçue de l'utilisateur: {current_user}")
+        # On vérifie que le dataset n'est pas en téléchargement
+        # (état 2 du container de preprocessing)
+        # et qu'il est donc présent pour y ajouter l'image
+        with open(preprocessing_state_path, "r") as file:
+            preprocessing_state = file.read()
+        if preprocessing_state != "2":
+            # On créer le chemin vers l'image
+            file_path = os.path.join(temp_folder, image_name)
+            # Si la classe est inconnue, on l'ajoute dans le dossier des images inconnues
+            if is_unknown:
+                os.rename(file_path, f"{unknown_images_path}/{image_name}")
+                return {"status": "Image ajoutée dans les images inconnues"}
+            # Si la classe est connue, on l'ajoute dans train au bon endroit
+            else:
+                class_path = os.path.join(dataset_raw_path, f"train/{species}")
+                if not os.path.exists(class_path):
+                    os.makedirs(class_path, exist_ok=True)
+                os.rename(file_path, f"{class_path}/{image_name}")
+                return {"status": f"Image ajouteé dans l'espèce suivante: '{species}'"}
+        else:
+            return "Le dataset de base n'est pas encore présent, merci de patienter..."
+    except Exception as e:
+        logging.error(f"Une erreur est survenue lors de l'ajout de l'image: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Une erreur est survenue lors de l'ajout de l'image: {str(e)}",
+        )
+

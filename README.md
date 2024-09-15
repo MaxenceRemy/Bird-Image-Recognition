@@ -161,9 +161,10 @@ Le reste du code est considéré comme ancien et ne doit être exécuté qu'à d
 **Version sans docker (non recommandé) :**
 
 1. Clonez ce repository.
-2. Installez les dépendances : `pip install -r requirements.txt`
-3. Complétez le fichier .env situé à la racine du projet avec vos identifiants Gmail (il ne faut pas utiliser le mot de passe du compte, mais générez un "App password" via l'interface de Gestion du compte Google).
-4. Ajoutez ensuite dans le même .env vos identifiants Kaggle (connectez-vous à votre compte kaggle.com puis "Settings > API > Create New Token").
+2. Installer une version de python située entre 3.10.2 et 3.10.14 
+3. Installez les dépendances : `pip install -r requirements.txt`
+4. Complétez le fichier .env situé à la racine du projet avec vos identifiants Gmail (il ne faut pas utiliser le mot de passe du compte, mais générez un "App password" via l'interface de Gestion du compte Google).
+5. Ajoutez ensuite dans le même .env vos identifiants Kaggle (connectez-vous à votre compte kaggle.com puis "Settings > API > Create New Token").
 
 
 ## Utilisation

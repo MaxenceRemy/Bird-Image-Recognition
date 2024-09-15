@@ -107,22 +107,14 @@ class SizeManager:
             df_birdName = df_to_resize[df_to_resize["birdName"] == birdName]
             # Ajout d'une colonne avec le ratio True or False pour savoir
             # si le ratio est proche de 1:1
-            df_birdName.loc[:, "ratio_size"] = np.abs(df_birdName["height"] / df_birdName["width"])
-            df_birdName.loc[:, "ratio_size_close_to_1"] = 1 - df_birdName["ratio_size"] < 0.2
+            df_birdName["ratio_size"] = np.abs(df_birdName["height"] / df_birdName["width"])
+            df_birdName["ratio_size_close_to_1"] = 1 - df_birdName["ratio_size"] < 0.2
 
             # On compte combien d'images sont proches d'un ratio 1:1
-            true_count = df_birdName[df_birdName["ratio_size_close_to_1"]][
-                "ratio_size_close_to_1"
-            ].value_counts()
-            false_count = df_birdName[~df_birdName["ratio_size_close_to_1"]][
-                "ratio_size_close_to_1"
-            ].value_counts()
-
-            # On récupère les nombres de ratios proches de 1
-            nb_true = true_count.iloc[0] if not true_count.empty else 0
-            nb_false = false_count.iloc[0] if not false_count.empty else 0
-
+            nb_true = df_birdName['ratio_size_close_to_1'].values.sum()
+            nb_false = (~df_birdName['ratio_size_close_to_1']).values.sum()
             total_images = nb_false + nb_true
+
             # Si moins de 80% des images ont un bon ratio, on ajoute cette classe à supprimer
             if nb_true / total_images < 0.8:
                 print("Classe à supprimer : ", birdName)
