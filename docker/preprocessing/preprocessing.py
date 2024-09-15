@@ -277,8 +277,8 @@ except Exception as e:
     )
 
 
-# Tous les jours à 02h, on vérifie la présence d'un nouveau dataset
-schedule.every().day.at("20:07").do(auto_update_dataset, "gpiosenka/100-bird-species", dataset_raw_path)
+# Tous les jours à 02h UTC+0, on vérifie la présence d'un nouveau dataset
+schedule.every().day.at("02:00").do(auto_update_dataset, "gpiosenka/100-bird-species", dataset_raw_path)
 
 # ----------------------------------------------------------------------------------------- #
 

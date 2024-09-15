@@ -118,7 +118,7 @@ def verify_token(token: str = Depends(OAuth2PasswordBearer(tokenUrl="/token"))):
         # On vérifie que l'utilisateur est bien autorisé
         user = load_authorized_users().get(username)
         # On renvoie une erreur si l'utilisateur n'est pas valide
-        if user is None or not user[0]:
+        if user is None:
             logging.warning("Le token ne contient pas de 'sub' valide")
             raise HTTPException(
                 status_code=401, detail="Impossible de valider les identifiants..."
