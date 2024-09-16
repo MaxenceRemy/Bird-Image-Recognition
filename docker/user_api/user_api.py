@@ -19,7 +19,7 @@ from dotenv import load_dotenv
 import logging
 
 # from app.models.predictClass import predictClass
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, PlainTextResponse
 import requests
 import hashlib
 import time
@@ -202,6 +202,34 @@ async def root(
         "message": "Bienvenue sur l'API de reconnaissance d'oiseaux",
         "user": username,
     }
+
+
+# Route pour tester l'état du preprocessing et la disponibilité du reste de l'API
+@app.get("/get_status")
+async def get_status(
+    api_key: str = Depends(verify_api_key), username: str = Depends(verify_token)
+):
+    try:
+        # On vérifie que le dataset n'est pas en téléchargement
+        with open(preprocessing_state_path, "r") as file:
+            preprocessing_state = file.read()
+        if preprocessing_state != "2":
+            return PlainTextResponse(
+                "L'API est prête, aucun téléchargement n'est en cours.",
+                status_code=200
+            )
+        else:
+            return PlainTextResponse(
+                "L'API n'est pas prête, le premier téléchargement du dataset est en cours.",
+                status_code=503
+            )
+
+    except Exception as e:
+        logging.error(f"Erreur lors de la récupération de l'état du preprocessing: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erreur lors de la récupération de l'état du preprocessing: {str(e)}",
+        )
 
 
 # Route pour faire une prédiction
