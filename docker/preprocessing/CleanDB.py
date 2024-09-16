@@ -62,7 +62,7 @@ class CleanDB:
                     continue
                 # On récupère le nombre du fichier
                 part_name = file.split(".")[0]
-                # On vérifie si le nom est un nombre (si ce n'est pas le cas, 
+                # On vérifie si le nom est un nombre (si ce n'est pas le cas,
                 # c'est un hash, donc pas de doublons à gérer)
                 if part_name.isdigit():
                     part_name = int(part_name)
