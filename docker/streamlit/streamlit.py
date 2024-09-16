@@ -10,6 +10,7 @@ st.set_page_config(page_title="Projet MLOps - Reconnaissance d'oiseaux", layout=
 # URLs des APIs
 USER_API_URL = os.getenv("USER_API_URL", "http://user_api:5000")
 ADMIN_API_URL = os.getenv("ADMIN_API_URL", "http://admin_api:5100")
+API_KEY = "abcd1234"
 
 if 'specie' not in st.session_state:
     st.session_state.specie = 0
@@ -19,6 +20,9 @@ if 'selected_species' not in st.session_state:
 
 if 'success' not in st.session_state:
     st.session_state.success = False
+
+if 'api_accessible' not in st.session_state:
+    st.session_state.api_accessible = False
 
 # Empeche les options de fullscreen de s'afficher pour les images
 hide_img_fs = '''
@@ -36,6 +40,23 @@ def load_and_resize_image(image_path, new_width):
     width, height = image.size
     new_height = int(height * (new_width / width))
     return image.resize((new_width, new_height), Image.LANCZOS)
+
+
+def get_api_status(token, username, password):
+    """
+    Renvoie l'état de l'api, inaccessible pendant le premier telechargement/preprocessing
+    """
+    if not st.session_state.api_accessible:
+        try:
+            headers = {"Authorization": f"Bearer {token}", "api-key": API_KEY}
+            response = requests.get(
+                f"{USER_API_URL}/get_status",
+                headers=headers,
+                data={"username": username, "password": password}
+            )
+            st.session_state.api_accessible = response.status_code == 200
+        except Exception:
+            st.session_state.api_accessible = False
 
 
 # Sidebar pour la navigation
@@ -466,7 +487,7 @@ elif page == "Résultats de l'entraînement":
         try:
             headers = {
                 "Authorization": f"Bearer {st.session_state.admin_token}",
-                "api-key": "abcd1234"
+                "api-key": API_KEY
             }
 
             # On récupère les résultats via l'API
@@ -572,8 +593,10 @@ elif page == "Interface utilisateur (APIs)":
                     if response.status_code == 200:
                         st.success(f"Connecté en tant que {username}")
                         st.session_state.user_token = response.json()["access_token"]
+                        get_api_status(st.session_state.user_token, username, password)
                     else:
                         st.error("Échec de l'authentification.")
+
                 except Exception:
                     st.error("Impossible de se connecter à l'API utilisateur. \
                              Assurez-vous que les conteneurs Docker sont en cours d'exécution.")
@@ -585,132 +608,99 @@ elif page == "Interface utilisateur (APIs)":
 
         # Système de prédiction si l'utilisateur ou l'administrateur est bien connecté
         if 'user_token' in st.session_state:
-            uploaded_file = st.file_uploader("Choisissez une image d'oiseau", type=["jpg", "png"])
+            # Si le premier preprocessing est terminé, l'api est accessible
+            if st.session_state.api_accessible:
+                uploaded_file = st.file_uploader("Choisissez une image d'oiseau", type=["jpg", "png"])
 
-            if uploaded_file is not None:
-                # Vérifiez si l'image a déjà été traitée
-                if 'current_image' not in st.session_state or st.session_state.current_image != uploaded_file.name:
-                    st.session_state.current_image = uploaded_file.name
-                    st.session_state.prediction = None
-                    st.session_state.class_images = None
-                    st.session_state.feedback_given = False
-                    st.session_state.feedback_step = None
-                    st.session_state.selected_species = None
+                if uploaded_file is not None:
+                    # Vérifiez si l'image a déjà été traitée
+                    if 'current_image' not in st.session_state or st.session_state.current_image != uploaded_file.name:
+                        st.session_state.current_image = uploaded_file.name
+                        st.session_state.prediction = None
+                        st.session_state.class_images = None
+                        st.session_state.feedback_given = False
+                        st.session_state.feedback_step = None
+                        st.session_state.selected_species = None
 
-                col1, col2, col3, col4 = st.columns([0.2, 0.2, 0.2, 0.22], vertical_alignment="bottom")
+                    col1, col2, col3, col4 = st.columns([0.2, 0.2, 0.2, 0.22], vertical_alignment="bottom")
 
-                # On ouvre l'image pour l'afficher
-                image = Image.open(uploaded_file)
-                with col1:
-                    st.image(image, caption="Image téléchargée")
+                    # On ouvre l'image pour l'afficher
+                    image = Image.open(uploaded_file)
+                    with col1:
+                        st.image(image, caption="Image téléchargée")
 
-                # On envoie la prédiction au modèle
-                if st.session_state.prediction is None:
-                    try:
-                        files = {"file": ("image.jpg", uploaded_file.getvalue(), "image/jpeg")}
-                        headers = {
-                            "Authorization": f"Bearer {st.session_state.user_token}",
-                            "api-key": "abcd1234"
-                        }
-                        # On fait une requête vers l'API
-                        response = requests.post(f"{USER_API_URL}/predict", files=files, headers=headers)
-                        st.session_state.prediction = response.json()
-                    except Exception:
-                        st.error(f"Impossible de communiquer avec l'API d'inférence : {response.json()}")
-
-                # On récupère les images des oiseaux
-                if st.session_state.class_images is None:
-                    try:
-                        st.session_state.class_images = []
-                        headers = {"Authorization": f"Bearer {st.session_state.user_token}", "api-key": "abcd1234"}
-                        for classe in st.session_state.prediction['predictions']:
-                            response = requests.get(f"{USER_API_URL}/get_class_image",
-                                                    params={'classe': classe},
-                                                    headers=headers)
-                            st.session_state.class_images.append(response.content)
-                    except Exception:
-                        st.error("Impossible de récupérer les images associées aux classes.")
-
-                # Affichage des prédictions
-                for i, col in enumerate([col2, col3, col4]):
-                    with col:
+                    # On envoie la prédiction au modèle
+                    if st.session_state.prediction is None:
                         try:
-                            st.image(st.session_state.class_images[i])
+                            files = {"file": ("image.jpg", uploaded_file.getvalue(), "image/jpeg")}
+                            headers = {
+                                "Authorization": f"Bearer {st.session_state.user_token}",
+                                "api-key": API_KEY
+                            }
+                            # On fait une requête vers l'API
+                            response = requests.post(f"{USER_API_URL}/predict", files=files, headers=headers)
+                            st.session_state.prediction = response.json()
                         except Exception:
-                            st.error("Impossible d'afficher les images associées aux classes.")
-                        st.markdown(
-                            f"""<p style="font-size: 20px;"> {st.session_state.prediction['predictions'][i]} </p>""",
-                            unsafe_allow_html=True
-                        )
-                        st.markdown(
-                            f"""<p style="color: {'#079e20' if i==0 else '#d1ae29' if i==1 else '#b26a19'}; \
-                            font-size: 20px;"> {str(round(st.session_state.prediction['scores'][i] * 100, 2)) + "%"} \
-                            </p>""",
-                            unsafe_allow_html=True
-                        )
+                            st.error(f"Impossible de communiquer avec l'API d'inférence : {response.json()}")
 
-                # Gestion des boutons de feedback
-                st.subheader("Une des prédictions est-elle correcte ?")
-                col1, col2, col3 = st.columns([0.1, 0.4, 0.5])
+                    # On récupère les images des oiseaux
+                    if st.session_state.class_images is None:
+                        try:
+                            st.session_state.class_images = []
+                            headers = {"Authorization": f"Bearer {st.session_state.user_token}", "api-key": API_KEY}
+                            for classe in st.session_state.prediction['predictions']:
+                                response = requests.get(f"{USER_API_URL}/get_class_image",
+                                                        params={'classe': classe},
+                                                        headers=headers)
+                                st.session_state.class_images.append(response.content)
+                        except Exception:
+                            st.error("Impossible de récupérer les images associées aux classes.")
 
-                with col1:
-                    if st.button("Oui", disabled=st.session_state.get('feedback_given', False)):
-                        st.session_state.feedback_step = "correct_prediction"
-                        st.session_state.selected_species = None
-                with col2:
-                    if st.button(
-                        "Non, mais je connais l'espèce correcte",
-                        disabled=st.session_state.get('feedback_given', False)
-                    ):
-                        st.session_state.feedback_step = "known_species"
-                        st.session_state.selected_species = None
-                with col3:
-                    if st.button("Je ne suis pas sûr", disabled=st.session_state.get('feedback_given', False)):
-                        st.session_state.feedback_step = "unsure"
-                        data = {
-                            "species": "NA",
-                            "image_name": st.session_state.prediction['filename'],
-                            "is_unknown": True
-                        }
-                        headers = {"Authorization": f"Bearer {st.session_state.user_token}", "api-key": "abcd1234"}
-                        response = requests.post(f"{USER_API_URL}/add_image", headers=headers, data=data)
-                        if response.status_code == 200:
-                            st.session_state.success = True
-                            st.session_state.feedback_given = True
-                            st.rerun()
-                        else:
-                            st.error("Échec de l'envoi de l'image.")
+                    # Affichage des prédictions
+                    for i, col in enumerate([col2, col3, col4]):
+                        with col:
+                            try:
+                                st.image(st.session_state.class_images[i])
+                            except Exception:
+                                st.error("Impossible d'afficher les images associées aux classes.")
+                            st.markdown(
+                                f"""<p style="font-size: 20px;"> \
+                                {st.session_state.prediction['predictions'][i]} </p>""",
+                                unsafe_allow_html=True
+                            )
+                            st.markdown(
+                                f"""<p style="color: {'#079e20' if i==0 else '#d1ae29' if i==1 else '#b26a19'}; \
+                                font-size: 20px;"> \
+                                {str(round(st.session_state.prediction['scores'][i] * 100, 2)) + "%"} \
+                                </p>""",
+                                unsafe_allow_html=True
+                            )
 
-                # Gestion de la sélection d'espèce
-                if 'feedback_step' in st.session_state and not st.session_state.get('feedback_given', False):
-                    if st.session_state.feedback_step == "correct_prediction":
-                        st.session_state.selected_species = st.selectbox(
-                            "Sélectionnez l'espèce correcte :",
-                            ["Sélectionnez une espèce..."] + st.session_state.prediction['predictions']
-                        )
-                    elif st.session_state.feedback_step == "known_species":
-                        if 'species_list' not in st.session_state:
-                            headers = {"Authorization": f"Bearer {st.session_state.user_token}", "api-key": "abcd1234"}
-                            response = requests.get(f"{USER_API_URL}/get_species", headers=headers)
-                            st.session_state.species_list = response.json()['species']
-                        st.session_state.selected_species = st.selectbox(
-                            "Sélectionnez l'espèce correcte :",
-                            ["Sélectionnez une espèce..."] + st.session_state.species_list
-                        )
+                    # Gestion des boutons de feedback
+                    st.subheader("Une des prédictions est-elle correcte ?")
+                    col1, col2, col3 = st.columns([0.1, 0.4, 0.5])
 
-                    # Soumission de la sélection d'espèce
-                    if (
-                        st.session_state.selected_species
-                        and st.session_state.selected_species != "Sélectionnez une espèce..."
-                    ):
-                        if st.button("Confirmer la sélection"):
-                            data = {"species": st.session_state.selected_species,
-                                    "image_name": st.session_state.prediction['filename'],
-                                    "is_unknown": False
-                                    }
-                            headers = {"Authorization": f"Bearer {st.session_state.user_token}", "api-key": "abcd1234"}
+                    with col1:
+                        if st.button("Oui", disabled=st.session_state.get('feedback_given', False)):
+                            st.session_state.feedback_step = "correct_prediction"
+                            st.session_state.selected_species = None
+                    with col2:
+                        if st.button(
+                            "Non, mais je connais l'espèce correcte",
+                            disabled=st.session_state.get('feedback_given', False)
+                        ):
+                            st.session_state.feedback_step = "known_species"
+                            st.session_state.selected_species = None
+                    with col3:
+                        if st.button("Je ne suis pas sûr", disabled=st.session_state.get('feedback_given', False)):
+                            st.session_state.feedback_step = "unsure"
+                            data = {
+                                "species": "NA",
+                                "image_name": st.session_state.prediction['filename'],
+                                "is_unknown": True
+                            }
+                            headers = {"Authorization": f"Bearer {st.session_state.user_token}", "api-key": API_KEY}
                             response = requests.post(f"{USER_API_URL}/add_image", headers=headers, data=data)
-
                             if response.status_code == 200:
                                 st.session_state.success = True
                                 st.session_state.feedback_given = True
@@ -718,12 +708,53 @@ elif page == "Interface utilisateur (APIs)":
                             else:
                                 st.error("Échec de l'envoi de l'image.")
 
-            # Réinitialiser l'état du feedback si aucun fichier n'est uploadé
-            else:
-                st.session_state.feedback_given = False
-                st.session_state.feedback_step = None
-                st.session_state.selected_species = None
+                    # Gestion de la sélection d'espèce
+                    if 'feedback_step' in st.session_state and not st.session_state.get('feedback_given', False):
+                        if st.session_state.feedback_step == "correct_prediction":
+                            st.session_state.selected_species = st.selectbox(
+                                "Sélectionnez l'espèce correcte :",
+                                ["Sélectionnez une espèce..."] + st.session_state.prediction['predictions']
+                            )
+                        elif st.session_state.feedback_step == "known_species":
+                            if 'species_list' not in st.session_state:
+                                headers = {"Authorization": f"Bearer {st.session_state.user_token}", "api-key": API_KEY}
+                                response = requests.get(f"{USER_API_URL}/get_species", headers=headers)
+                                st.session_state.species_list = response.json()['species']
+                            st.session_state.selected_species = st.selectbox(
+                                "Sélectionnez l'espèce correcte :",
+                                ["Sélectionnez une espèce..."] + st.session_state.species_list
+                            )
 
+                        # Soumission de la sélection d'espèce
+                        if (
+                            st.session_state.selected_species
+                            and st.session_state.selected_species != "Sélectionnez une espèce..."
+                        ):
+                            if st.button("Confirmer la sélection"):
+                                data = {"species": st.session_state.selected_species,
+                                        "image_name": st.session_state.prediction['filename'],
+                                        "is_unknown": False
+                                        }
+                                headers = {"Authorization": f"Bearer {st.session_state.user_token}", "api-key": API_KEY}
+                                response = requests.post(f"{USER_API_URL}/add_image", headers=headers, data=data)
+
+                                if response.status_code == 200:
+                                    st.session_state.success = True
+                                    st.session_state.feedback_given = True
+                                    st.rerun()
+                                else:
+                                    st.error("Échec de l'envoi de l'image.")
+
+                # Réinitialiser l'état du feedback si aucun fichier n'est uploadé
+                else:
+                    st.session_state.feedback_given = False
+                    st.session_state.feedback_step = None
+                    st.session_state.selected_species = None
+
+            # Si le premier preprocessing n'est pas terminé, l'api est inaccessible
+            else:
+                st.warning("Le premier démarrage nécessite le téléchargement d'un jeu de données. \
+                    Attendez quelques minutes et rafraîchissez la page")
     else:
         st.subheader("API Admin")
 
@@ -739,67 +770,75 @@ elif page == "Interface utilisateur (APIs)":
                 if response.status_code == 200:
                     st.info(f"Connecté en tant qu'administrateur avec l'utilisateur : {admin_username}")
                     st.session_state.admin_token = response.json()["access_token"]
+                    get_api_status(st.session_state.admin_token, admin_username, admin_password)
                 else:
                     st.error(f"Impossible de se connecter à l'API administrateur, erreur {response.status_code}")
+
             except Exception:
                 st.error("Impossible de se connecter à l'API administrateur. \
                          Assurez-vous que les conteneurs Docker sont en cours d'exécution.")
 
         # Si l'utilisateur est bien connecté, on affiche l'interface
+        # Si le premier preprocessing est terminé, l'api est accessible
         if 'admin_token' in st.session_state:
+            if st.session_state.api_accessible:
+                # Permet d'ajouter un utilisateur
+                st.subheader("Ajouter un utilisateur")
+                new_username = st.text_input("Nouveau nom d'utilisateur")
+                new_password = st.text_input("Nouveau mot de passe", type="password")
+                is_admin = st.checkbox("Est administrateur")
+                if st.button("Ajouter l'utilisateur"):
+                    try:
+                        headers = {
+                            "Authorization": f"Bearer {st.session_state.admin_token}",
+                            "api-key": API_KEY
+                        }
+                        data = {"new_username": new_username, "user_password": new_password, "is_admin": is_admin}
+                        # On demande à l'API d'ajouter l'utilisateur
+                        response = requests.post(f"{ADMIN_API_URL}/add_user", headers=headers, data=data)
 
-            # Permet d'ajouter un utilisateur
-            st.subheader("Ajouter un utilisateur")
-            new_username = st.text_input("Nouveau nom d'utilisateur")
-            new_password = st.text_input("Nouveau mot de passe", type="password")
-            is_admin = st.checkbox("Est administrateur")
-            if st.button("Ajouter l'utilisateur"):
-                try:
-                    headers = {
-                        "Authorization": f"Bearer {st.session_state.admin_token}",
-                        "api-key": "abcd1234"
-                    }
-                    data = {"new_username": new_username, "user_password": new_password, "is_admin": is_admin}
-                    # On demande à l'API d'ajouter l'utilisateur
-                    response = requests.post(f"{ADMIN_API_URL}/add_user", headers=headers, data=data)
+                        st.info(response.json())
 
-                    st.info(response.json())
+                    except Exception as e:
+                        st.error(f"Impossible de communiquer avec l'API administrateur : {e}")
 
-                except Exception as e:
-                    st.error(f"Impossible de communiquer avec l'API administrateur : {e}")
+                st.write("---")
 
-            st.write("---")
+                # Lancer l'entraînement
+                if st.button("Lancer l'entraînement"):
+                    try:
+                        headers = {
+                            "Authorization": f"Bearer {st.session_state.admin_token}",
+                            "api-key": API_KEY
+                        }
+                        # On demande à l'API de lancer l'entraînement
+                        response = requests.get(f"{ADMIN_API_URL}/train", headers=headers)
 
-            # Lancer l'entraînement
-            if st.button("Lancer l'entraînement"):
-                try:
-                    headers = {
-                        "Authorization": f"Bearer {st.session_state.admin_token}",
-                        "api-key": "abcd1234"
-                    }
-                    # On demande à l'API de lancer l'entraînement
-                    response = requests.get(f"{ADMIN_API_URL}/train", headers=headers)
+                        st.info(response.json())
+                    except Exception as e:
+                        st.error(f"Impossible de communiquer avec l'API d'entraînement : {e}")
 
-                    st.info(response.json())
-                except Exception as e:
-                    st.error(f"Impossible de communiquer avec l'API d'entraînement : {e}")
+                st.write("---")
 
-            st.write("---")
+                st.write("Changer le modèle en production")
+                run_id = st.text_input("Indiquez le run_id du modèle")
+                if st.button("Valider"):
+                    try:
+                        headers = {
+                            "Authorization": f"Bearer {st.session_state.admin_token}",
+                            "api-key": API_KEY
+                        }
+                        data = {"run_id": run_id}
+                        # On demande à l'API de changer le modèle en production
+                        response = requests.post(f"{ADMIN_API_URL}/switchmodel", headers=headers, data=data)
+                        st.info(response.json())
+                    except Exception as e:
+                        st.error(f"Impossible de communiquer avec l'API d'inférence : {e}")
 
-            st.write("Changer le modèle en production")
-            run_id = st.text_input("Indiquez le run_id du modèle")
-            if st.button("Valider"):
-                try:
-                    headers = {
-                        "Authorization": f"Bearer {st.session_state.admin_token}",
-                        "api-key": "abcd1234"
-                    }
-                    data = {"run_id": run_id}
-                    # On demande à l'API de changer le modèle en production
-                    response = requests.post(f"{ADMIN_API_URL}/switchmodel", headers=headers, data=data)
-                    st.info(response.json())
-                except Exception as e:
-                    st.error(f"Impossible de communiquer avec l'API d'inférence : {e}")
+            # Si le premier preprocessing n'est pas terminé, l'api est inaccessible
+            else:
+                st.warning("Le premier démarrage nécessite le téléchargement d'un jeu de données. \
+                    Attendez quelques minutes et rafraîchissez la page")
 
 elif page == "Conclusion":
 
