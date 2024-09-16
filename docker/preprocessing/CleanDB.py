@@ -61,10 +61,14 @@ class CleanDB:
                 if not os.path.isfile(os.path.join(complete_bird_dir, file)):
                     continue
                 # On récupère le nombre du fichier
-                part_name = int(file.split(".")[0])
-                # On gère les doublons en incrémentant le nombre
-                while os.path.isfile(os.path.join(new_bird_dir, str(part_name) + ".jpg")):
-                    part_name += 1
+                part_name = file.split(".")[0]
+                # On vérifie si le nom est un nombre (si ce n'est pas le cas, 
+                # c'est un hash, donc pas de doublons à gérer)
+                if part_name.isdigit():
+                    part_name = int(part_name)
+                    # On gère les doublons en incrémentant le nombre
+                    while os.path.isfile(os.path.join(new_bird_dir, str(part_name) + ".jpg")):
+                        part_name += 1
                 # On déplace le fichier dans le dossier complet
                 os.rename(
                     os.path.join(complete_bird_dir, file),
